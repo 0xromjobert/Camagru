@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  web:
+    container_name: web_camagru
+    build: .
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - .:/code
+    depends_on:
+      - db
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${POSTGRES_NAME}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+  db:
+    container_name: db_camagru
+    image: postgres:12
+    # volumes:
+    #   - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck: #making sure it starts up before the web service
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
