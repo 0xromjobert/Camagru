@@ -1,6 +1,6 @@
-const {DataTypes} = require('sequelize'); //what is this?
-
-const sequelize = require('../config/database');
+const {DataTypes} = require('sequelize'); // Import the built-in data types
+ 
+const sequelize = require('../config/database'); // Import the connection to the database
 
 const User = sequelize.define('User', {
     username: {

@@ -6,8 +6,9 @@ services:
     build: .
     ports:
       - "3000:3000"
-    # volumes:
-    #   - .:/code
+    volumes:
+      - .:/usr/src/app # Maps your local project to the container
+      - /usr/src/app/node_modules # Avoids overwriting node_modules
     depends_on:
       - db
     environment:
@@ -26,7 +27,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck: #making sure it starts up before the web service
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_NAME}"]
+      interval: 5s
       timeout: 5s
       retries: 5
