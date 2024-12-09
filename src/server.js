@@ -1,12 +1,21 @@
-const express = require('express');
+const app = require('./app');
+const {connectToDatabase} = require('./config/database');
+const applyMigrations = require('./utils/migrations');
 
-const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+const PORT = process.env.PORT || 3000;
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectToDatabase();
+    await applyMigrations();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
