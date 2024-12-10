@@ -1,6 +1,6 @@
 const { generateJWT } = require('../middleware/tokenJWT'); // Adjust the path
 const { decodeBase64 } = require('../utils/base64Encoding'); // Adjust the path
-const dotenv = require("dotenv").config({ path: "../../.env" });
+const dotenv = require("dotenv").config();
 
 describe('generateJWT function', () => {
     //const secret = 'mySecretKey'; // Replace this with your real secret

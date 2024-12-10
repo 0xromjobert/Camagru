@@ -27,7 +27,7 @@ async function query(text, params) {
     const client = await pool.connect(); // Get a connection from the pool
     try {
         const result = await client.query(text, params); // Execute query
-        return result.rows; // Return the result rows
+        return result; // Return the result rows
     } finally {
         client.release(); // Release client back to the pool
     }

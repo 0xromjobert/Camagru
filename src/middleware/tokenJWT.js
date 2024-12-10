@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const dotenv = require("dotenv").config({ path: "../../.env" });
+const dotenv = require("dotenv").config();
 
 const {encodeBase64, decodeBase64} = require("../utils/base64Encoding");
 const secret = process.env.SECRET_KEY;
@@ -15,8 +15,7 @@ function generateJWT(payload) {
         .replace(/=/g, "")
         .replace(/\+/g, "-")
         .replace(/\//g, "_");
-    const token = `${tokenHeader}.${tokenPayload}.${signature}`
-    console.log(token);
+    const token = `${tokenHeader}.${tokenPayload}.${signature}`;
     return token;
 }
 

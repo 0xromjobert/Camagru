@@ -5,7 +5,7 @@ const db = require('../config/database');
 async function applyMigrations() {
     try {
         const migrations = await db.query("SELECT * FROM migrations");
-        const appliedMigrations = migrations.map(migration => migration.name);
+        const appliedMigrations = migrations.rows.map(migration => migration.name);
         
         const migPath = path.join(__dirname, '../..', 'migrations');
         const migrationFiles = fs.readdirSync(migPath);
