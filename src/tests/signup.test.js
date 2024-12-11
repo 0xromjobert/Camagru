@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../app'); // Your Express app
+const app = require('../app');  //our Express app - NOT a test one
 const { query } = require('../config/database');
 
 

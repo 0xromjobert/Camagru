@@ -1,5 +1,5 @@
 const express = require('express');
-const signupRoutes = require('./routes/auth');
+const userRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 // Mount the auth routes at a specific path
-app.use('/auth', signupRoutes);
+app.use('/auth', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');

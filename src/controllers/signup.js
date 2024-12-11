@@ -24,8 +24,6 @@ const signup = async (req, res) => {
             return res.status(500).json({ message: 'An error occurred while creating your account' });
         }
         const userId = user.rows[0].id;
-
-        console.log("user id is ", userId);    
         
         // Generate JWT
         const payload = {
