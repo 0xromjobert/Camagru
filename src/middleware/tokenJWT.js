@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const dotenv = require("dotenv").config();
 const {encodeBase64, decodeBase64} = require("../utils/base64Encoding");
+const { verify } = require("../controllers/emailHelper");
 const secret = process.env.SECRET_KEY;
 
 //to take off after testing
@@ -65,4 +66,4 @@ function verifyJWT(token) {
     }
 }
      
-module.exports = {generateJWT, authToken};
+module.exports = {generateJWT, authToken, verifyJWT};

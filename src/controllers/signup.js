@@ -1,6 +1,7 @@
-const {generateJWT} = require('../middleware/tokenJWT');
+const {generateJWT, verifyJWT} = require('../middleware/tokenJWT');
 const bcrypt = require('bcrypt');
 const {query} = require('../config/database');
+const {sendEmail} = require('./emailHelper');
 
 const signup = async (req, res) => {
     // Validate input
@@ -29,12 +30,12 @@ const signup = async (req, res) => {
         const payload = {
             username : username,
             user_id : userId,
-            exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
+            purpose : 'email_verification',
+            exp: Math.floor(Date.now() / 1000) + 60*60*24, // Expires in 24 hours
         }
         const token = generateJWT(payload);
 
-        // Mock email functionality
-        console.log(`Mock email sent to ${email} with token: ${token}`);
+        sendVerificationEmail(email, token);
         
         return res.status(201).json({ 
             message: 'User created successfully, check your email for verification', 
@@ -47,5 +48,27 @@ const signup = async (req, res) => {
     }
 }
 
+function sendVerificationEmail(emailAddr, token) {
+    // Mock email functionality
+    const emailContent = `Click the link to verify your email: http://localhost:3000/auth/verify?token=${token}`;
+    sendEmail(emailAddr, 'Email Verification Camagru', emailContent);
+}
 
-module.exports = signup;
+async function verifyEmailToken(linkToken) {
+    const payload = verifyJWT(linkToken);
+    if (!payload || payload.purpose !== 'email_verification') {
+        return false;
+    }
+    // Update user in database to verified
+    const userId = payload.user_id;
+    const user = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (!user || user.rows.length === 0)
+        return false;
+    const q = await query('UPDATE users SET is_confirmed = true WHERE id = $1 RETURNING *', [userId]);
+    if (!q || q.rows.length === 0)
+        return false;
+    return true;
+}
+
+
+module.exports = {signup, verifyEmailToken};

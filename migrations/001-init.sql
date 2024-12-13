@@ -4,6 +4,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE, -- Unique username, max 50 characters
     email VARCHAR(100) NOT NULL UNIQUE,   -- Unique email, max 100 characters
     password VARCHAR(255) NOT NULL,       -- Hashed password
+    is_confirmed BOOLEAN DEFAULT FALSE,       -- Email confirmation status
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set creation time
 );
 

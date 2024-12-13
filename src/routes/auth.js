@@ -1,5 +1,5 @@
 const express = require('express');
-const signup = require('../controllers/signup');
+const {signup, verifyEmailToken} = require('../controllers/signup');
 const login = require('../controllers/login');
 const { authToken } = require('../middleware/tokenJWT');
 const {signupValidationRules, loginValidationRules, validate} = require('../middleware/authValidator.js');
@@ -19,6 +19,16 @@ router.post('/login', loginValidationRules, validate, login);
 
 router.get('/login', (req, res) => {
     res.send('Welcome to login Page!');
+});
+
+router.get('/verify', async (req, res) => {
+    const params = req.query;
+    console.log(params);
+    const verified = await verifyEmailToken(params.token);
+    if (verified) {
+        return res.status(200).json({message: 'Email verified successfully'});
+    }
+    return res.status(400).json({message: 'Email verification failed'});
 });
 
 // Protected route (authentication required)

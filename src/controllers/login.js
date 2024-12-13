@@ -18,6 +18,9 @@ const login = async (req, res) => {
         if (!validPassword) {
             return res.status(400).json({message: 'Invalid Password'});
         }
+        if (!user.is_confirmed) {
+            return res.status(400).json({message: 'Please verify your email link before logging in'});
+        }
         // Generate JWT
         const payload = {
             username: user.username,
