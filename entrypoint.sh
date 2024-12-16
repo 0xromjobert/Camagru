@@ -7,8 +7,10 @@ while ! nc -z $DB_HOST $DB_PORT; do
   sleep 2
 done
 
-echo "Running migrations..."
-npx sequelize-cli db:migrate
+
+# echo "Running migrations..."
+# npx sequelize-cli db:migrate
+
 
 echo "Starting the application..."
 exec "$@"

@@ -20,8 +20,9 @@ services:
   db:
     container_name: db_camagru
     image: postgres:12
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+      #- ./postgres_data: /var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -31,3 +32,4 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    #restart: always
