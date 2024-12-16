@@ -1,6 +1,6 @@
 const express = require('express');
 const {signup, verifyEmailToken} = require('../controllers/signup');
-const login = require('../controllers/login');
+const {login, verifyResetToken, resetPassword, askResetPassword} = require('../controllers/login');
 const { authToken } = require('../middleware/tokenJWT');
 const {signupValidationRules, loginValidationRules, validate} = require('../middleware/authValidator.js');
 
@@ -30,6 +30,25 @@ router.get('/verify', async (req, res) => {
     }
     return res.status(400).json({message: 'Email verification failed'});
 });
+
+router.post('/reset-request', askResetPassword);
+
+router.get('/reset-password/', (req, res) => {
+    try {
+        const params = req.query;
+        const verified = verifyResetToken(params.token);
+        if (verified) {
+            return res.status(200).json({message: 'Password reset successful', token: params.token});
+        }
+    }catch (error) {
+        console.error('Error during password reset:', error);
+        res.status(400).json({message: error.message});
+    }
+});
+
+
+router.post('/reset-password', authToken, resetPassword);
+
 
 // Protected route (authentication required)
 router.get('/test', authToken, (req, res) => {
