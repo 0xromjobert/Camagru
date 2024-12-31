@@ -13,11 +13,11 @@ document.getElementById('SignupForm').addEventListener('submit', async (e) => {
     });
   
     const result = await response.json();
-    console.log(result);
-    if (result.success) {
-      window.location.href = '/edit'; // Redirect to edit page
+    if (response.ok) {
+    alert(result.message);
+      window.location.href = '/auth/login'; // Redirect to edit page
     } else {
-      alert('Invalid credentials');
+        result.message? alert(result.message) : alert('Invalid credentials');
       if (result.errors) {
         for (const error of result.errors) {
           console.error(error);

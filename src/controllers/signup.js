@@ -35,10 +35,10 @@ const signup = async (req, res) => {
         }
         const token = generateJWT(payload);
 
-        sendVerificationEmail(email, token);
+        sendVerificationEmail(email, username, token);
         
         return res.status(201).json({ 
-            message: 'User created successfully, check your email for verification', 
+            message: `Your account was created successfully ${username}, check your email for verification`, 
             token: token
          });
     }
@@ -48,9 +48,9 @@ const signup = async (req, res) => {
     }
 }
 
-function sendVerificationEmail(emailAddr, token) {
+function sendVerificationEmail(emailAddr, username, token) {
     // Mock email functionality
-    const emailContent = `Click the link to verify your email: http://localhost:3000/auth/verify?token=${token}`;
+    const emailContent = `Hi ${username}, Click the link to verify your email: http://localhost:3000/api/auth/verify?token=${token}`;
     sendEmail(emailAddr, 'Email Verification Camagru', emailContent);
 }
 

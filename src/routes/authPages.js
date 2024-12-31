@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const {authToken} = require('../middleware/tokenJWT');
 
 // Create an express router
 const router = express.Router();
@@ -14,4 +15,8 @@ router.get('/login', (req, res) => {
     //res.send('Welcome to login Page!');
 });
 
+router.get('/welcome', authToken, (req, res) => {
+    res.send(`Welcome, you are logged in`);
+    //res.send(`Welcome ${req.user.username}`);
+});
 module.exports = router;

@@ -2,7 +2,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
   
     const formData = new FormData(e.target);
-    const response = await fetch('/api/login', {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({
         username: formData.get('username'),
@@ -10,11 +10,18 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       }),
       headers: { 'Content-Type': 'application/json' },
     });
-  
+    console.log(response);
     const result = await response.json();
-    if (result.success) {
-      window.location.href = '/edit'; // Redirect to edit page
+    if (response.ok) {
+      token = result.token;
+      localStorage.setItem('token', token); //later on cookie for xss
+      window.location.href = '/auth/welcome'; // Redirect to test page
     } else {
-      alert('Invalid credentials');
+      result.message? alert(result.message) : alert('Invalid credentials');
+      if (result.errors) {
+        for (const error of result.errors) {
+          console.error(error);
+        }
+      }
     }
   });
