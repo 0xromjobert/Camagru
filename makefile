@@ -15,6 +15,8 @@ stop:
 down: stop
 	docker-compose down
 
+re: clear all
+
 clear: down
 	docker-compose stop $(docker-compose ps -q)
 	docker-compose down --volumes --remove-orphans
