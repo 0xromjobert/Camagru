@@ -1,22 +1,9 @@
-const {DataTypes} = require('sequelize'); // Import the built-in data types
- 
-const sequelize = require('../config/database'); // Import the connection to the database
+const {query} = require('../config/database');
 
-const User = sequelize.define('User', {
-    username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-    },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-});
+async function getUserById(userId){
+    const result = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) return null;
+    return result.rows[0];
+}
 
-module.exports = User;
+module.exports = {getUserById};

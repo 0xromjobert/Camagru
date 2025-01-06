@@ -15,8 +15,8 @@ router.get('/login', (req, res) => {
     //res.send('Welcome to login Page!');
 });
 
-router.get('/welcome', authToken, (req, res) => {
-    res.send(`Welcome, you are logged in`);
-    //res.send(`Welcome ${req.user.username}`);
+//maybe later will add in other router (like /profile with more buttons etc..)
+router.get('/profile', authToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '../views/profile.html'));
 });
 module.exports = router;

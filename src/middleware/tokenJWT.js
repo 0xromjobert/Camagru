@@ -9,20 +9,17 @@ console.log("Loaded SECRET_KEY:", process.env.SECRET_KEY, "vs ", secret);
 
 function authToken(req, res, next) {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader)
-            return res.status(401).json({message: "Missing Authorization header"});
-        const token = authHeader.split(" ")[1];
+        const token = req.cookies.authToken;
         if (!token)
             return res.status(401).json({message: "Missing token"});
         const payload = verifyJWT(token);
         if (!payload)
             return res.status(401).json({message: "Invalid token"});
-        req.user = payload;
+        req.user = payload; //we add the payload to request
         next();
     }
     catch(error) {
-        //console.error("Error validating token:", error);
+        console.error("Error validating token:", error);
         return res.status(401).json({message: "Invalid token"});
     }
 }

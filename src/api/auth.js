@@ -4,12 +4,17 @@ const {signupValidationRules, loginValidationRules, validate} = require('../midd
 const { authToken } = require('../middleware/tokenJWT');
 const express = require('express')
 
-router = express.Router();
+const router = express.Router();
 // Define the routes for the signup endpoint
 router.post('/signup', signupValidationRules, validate, signup);
 
 //same but for login
 router.post('/login', loginValidationRules, validate, login);
+
+router.get('/logout', authToken, (req, res) => {
+    res.clearCookie('authToken', { path: '/' }); // Clear the cookie
+    res.redirect('/auth/login'); // Redirect to login page
+});
 
 router.get('/verify', async (req, res) => {
     const params = req.query;

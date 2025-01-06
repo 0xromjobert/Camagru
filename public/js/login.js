@@ -12,11 +12,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     });
     console.log(response);
     const result = await response.json();
-    if (response.ok) {
-      token = result.token;
-      localStorage.setItem('token', token); //later on cookie for xss
-      window.location.href = '/auth/welcome'; // Redirect to test page
-    } else {
+    if (response.ok)
+      window.location.href = '/auth/profile'; // Redirect to test page
+    else {
       result.message? alert(result.message) : alert('Invalid credentials');
       if (result.errors) {
         for (const error of result.errors) {
@@ -25,3 +23,26 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       }
     }
   });
+
+  document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const response = await fetch('/api/auth/reset-request', {
+      method: 'POST',
+      body: JSON.stringify({email: formData.get('email')}),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    console.log(response);
+    const result = await response.json();
+    if (response.ok)
+      window.location.href = '/'; // Redirect to test page
+    else {
+      result.message? alert(result.message) : alert('Invalid credentials');
+      if (result.errors) {
+        for (const error of result.errors) {
+          console.error(error);
+        }
+      }
+    }
+});

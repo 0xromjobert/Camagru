@@ -29,6 +29,11 @@ const login = async (req, res) => {
             exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
         }
         const token = generateJWT(payload);
+        res.cookie('authToken', token, {
+            httpOnly:true,
+            sameSite: 'Strict',
+            secure:false, //to allow http
+        });
         return res.status(200).json({message: 'Login successful', token: token});
     }
     catch (error) {
@@ -92,7 +97,7 @@ async function resetPassword(req, res) {
 
 function sendResetEmail(emailAddr, token) {
     // Mock email functionality
-    const emailContent = `Click the link to reset your password: http://localhost:3000/auth/reset-password?token=${token}`;
+    const emailContent = `Click the link to reset your password: http://localhost:3000/api/auth/reset-password?token=${token}`;
     sendEmail(emailAddr, 'Password Reset Camagru', emailContent);
 }
 

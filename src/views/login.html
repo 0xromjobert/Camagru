@@ -5,11 +5,21 @@
   <script src="/js/login.js" defer></script>
 </head>
 <body>
-  <h1>Login</h1>
-  <form id="loginForm">
-    <input type="text" name="username" placeholder="Username" required />
-    <input type="password" name="password" placeholder="Password" required />
-    <button type="submit">Login</button>
+  <div>
+    <h1>Login</h1>
+    <form id="loginForm">
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+</div>
+<div>
+  <h3> Forgot your password?</h3>
+  <span>Ask for a recovery link</span>
+  <form id="forgotForm">
+    <input type="email" name="email" placeholder="Your email" required />
+    <button type="submit">receive link</button>
   </form>
+</div>
 </body>
 </html>
