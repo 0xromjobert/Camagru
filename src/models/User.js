@@ -6,4 +6,9 @@ async function getUserById(userId){
     return result.rows[0];
 }
 
-module.exports = {getUserById};
+async function getUserByField(field, value){
+    const result = await query(`SELECT * FROM users WHERE ${field} = $1`, [value]);
+    if (result.rows.length === 0) return null;
+    return result.rows[0];
+}
+module.exports = {getUserById, getUserByField};

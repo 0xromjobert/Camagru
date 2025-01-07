@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname,'../public')));
 app.use('/api/auth', authAPI);
 app.use('/api/user', userAPI);
 
-// Mount the auth routes at a specific path
+// Mount the auth routes at a specific path for html Pages
 app.use('/auth', userRoutes);
 
 app.get('/', (req, res) => {

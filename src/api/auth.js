@@ -1,8 +1,9 @@
 const {signup, verifyEmailToken} = require('../controllers/signup');
 const {login, verifyResetToken, resetPassword, askResetPassword} = require('../controllers/login');
 const {signupValidationRules, loginValidationRules, validate} = require('../middleware/authValidator.js');
-const { authToken } = require('../middleware/tokenJWT');
+const { authToken, verifyJWT } = require('../middleware/tokenJWT');
 const express = require('express')
+const path = require('path');
 
 const router = express.Router();
 // Define the routes for the signup endpoint
@@ -28,19 +29,30 @@ router.get('/verify', async (req, res) => {
 
 router.post('/reset-request', askResetPassword);
 
-router.get('/reset-password/', (req, res) => {
+router.get('/reset-password/', async (req, res) => {
     try {
         const params = req.query;
-        const verified = verifyResetToken(params.token);
-        if (verified) {
-            return res.status(200).json({message: 'Password reset successful', token: params.token});
+        const verified = await verifyResetToken(params.token);
+        console.log('in GET /reset-pwd we have payload after verif',verified.status, verified.token, verified.message);
+        if (verified.status){
+            payload_token = verifyJWT(verified.token);
+            console.log('success in the verif REset token, the token payload is', payload_token);
+            res.cookie('authToken',verified.token,{
+                httpOnly: true,
+                sameSite:'Strict',
+                secure: false,
+            });           
+            res.sendFile(path.join(__dirname, '../views/resetPage.html'));
         }
+        else
+            return res.status(401).json({message:'Couldnot Verify your Reset Link'});
+
     }catch (error) {
         console.error('Error during password reset:', error);
         res.status(400).json({message: error.message});
     }
 });
 
-router.post('/reset-password', authToken, resetPassword);
+router.post('/reset-password', authToken, resetPassword); //missing validation rules
 
 module.exports = router;

@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const {query} = require('../config/database');
 const {generateJWT, verifyJWT} = require('../middleware/tokenJWT');
 const {sendEmail} = require('./emailHelper');
+const {getUserByField} = require("../models/User");
 
 
 const login = async (req, res) => {
@@ -68,20 +69,19 @@ async function askResetPassword(req, res) {
 
 async function resetPassword(req, res) {
     try {
-        if (!req.user)
+        if (!req.user) //coming from middleware authToken
             return res.status(401).json({message: 'Unauthorized'});
-        console.log(req.body);
+        console.log('in reset pwd POST body is',req.body);
         if (!req.body.password || !req.body.confirmPassword) {
             return res.status(400).json({message: 'All fields are required'});
         }
         if (req.body.password !== req.body.confirmPassword) {
             return res.status(400).json({message: 'Passwords do not match'});
         }
-        const payload = req.user; //coming from middleware authToken
-        console.log('Payload:', payload);
-        const user = await query('SELECT * FROM users WHERE email = $1', [payload.email]);
+        console.log('in resetPwd POST API WE have user as', req.user);
+        const user = await query('SELECT * FROM users WHERE id = $1', [req.user.user_id]);
         if (!user || user.rows.length === 0) {
-            return res.status(400).json({message: 'User not found'});
+            return res.status(404).json({message: 'User not found'});
         }
         console.log('User:', user.rows[0]);
         const salt = await bcrypt.genSalt(10);
@@ -96,6 +96,8 @@ async function resetPassword(req, res) {
 }
 
 function sendResetEmail(emailAddr, token) {
+    //real-email sendign to a formpage with toke
+    //const emailContent = `Click the link to reset your password: http://localhost:3000/auth/reset-page?token=${token}`;
     // Mock email functionality
     const emailContent = `Click the link to reset your password: http://localhost:3000/api/auth/reset-password?token=${token}`;
     sendEmail(emailAddr, 'Password Reset Camagru', emailContent);
@@ -103,14 +105,22 @@ function sendResetEmail(emailAddr, token) {
 
 async function verifyResetToken(linkToken) {
     const payload = verifyJWT(linkToken);
+    console.log('in verify reset token pauload', payload);
     if (!payload || payload.purpose !== 'password_reset') {
-        return false;
+        return { status: false, message: 'Invalid or expired token' };
     }
-    const user = await query('SELECT * FROM users WHERE email = $1', [payload.email]);
-    if (!user || user.rows.length === 0) {
-        return false;
+    const user = await getUserByField('email',payload.email);
+    if (!user) {
+        return { status: false, message: 'User not found' };
     }
-    return true;
+    // Generate JWT
+    const authPayload = {
+        username: user.username,
+        user_id: user.id,
+        exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
+    }
+    const token = generateJWT(authPayload);
+    return { status: true, token:token };
 }
 
 module.exports = {login, verifyResetToken, askResetPassword, resetPassword};

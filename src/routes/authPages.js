@@ -19,4 +19,5 @@ router.get('/login', (req, res) => {
 router.get('/profile', authToken, (req, res) => {
     res.sendFile(path.join(__dirname, '../views/profile.html'));
 });
+
 module.exports = router;
