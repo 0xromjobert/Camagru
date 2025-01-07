@@ -8,18 +8,21 @@ document.getElementById('resetForm').addEventListener('submit', async (e)=>{
             password : formData.get('password'),
             confirmPassword: formData.get('confirmpassword')}),
         headers: { 'Content-Type': 'application/json' },
-    })
-    console.log(resp);
+    });
     const data = await resp.json();
+    console.log(data);
     if (resp.ok)
     {
         alert(data.message);
         window.location.href = '/auth/login';
     }
-    data.message? alert(data.message):alert("ISSUE: Could not reset your password");
-    if (data.errors){
-        for (const error in data.errors){
-            console.log(error);
+    else {
+        data.message? alert(data.message): null;
+        if (data.errors){
+            for (const error of data.errors){
+                alert(error.msg);
+                console.log(error);
+            }
         }
     }
 });

@@ -8,13 +8,13 @@ const signup = async (req, res) => {
     console.log("body is ", req.body);
     const { username, email, password } = req.body;
     if (!username || !email || !password){
-        return res.status(400).json({ message: 'All fields are required' });
+        return res.status(401).json({ message: 'All fields are required' });
     }
     try {
         // Check if the user or email already exists
         const existingUser = await query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
         if (existingUser && existingUser.rows.length > 0) {
-            return res.status(400).json({ message: 'A user already exists with your credentials' });
+            return res.status(401).json({ message: 'A user already exists with your credentials' });
         }
 
         //hash passwrod then insert the new user into the database
@@ -44,7 +44,7 @@ const signup = async (req, res) => {
     }
     catch (error) {
         console.error('Error during signup:', error);
-        res.status(400).json({ message: error.message });
+        res.status(401).json({ message: error.message });
     }
 }
 

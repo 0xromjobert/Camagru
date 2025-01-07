@@ -1,5 +1,6 @@
 const express = require('express');
-const userRoutes = require('./routes/authPages');
+const authRoutes = require('./routes/authPages');
+const profileRoutes = require('./routes/profile');
 const authAPI = require('./api/auth');
 const userAPI = require('./api/userPage')
 const path = require('path');
@@ -18,7 +19,8 @@ app.use('/api/auth', authAPI);
 app.use('/api/user', userAPI);
 
 // Mount the auth routes at a specific path for html Pages
-app.use('/auth', userRoutes);
+app.use('/auth', authRoutes);
+app.use('/profile', profileRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');

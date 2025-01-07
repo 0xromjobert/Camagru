@@ -13,11 +13,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     console.log(response);
     const result = await response.json();
     if (response.ok)
-      window.location.href = '/auth/profile'; // Redirect to test page
+      window.location.href = '/profile'; // Redirect to page
     else {
-      result.message? alert(result.message) : alert('Invalid credentials');
+      result.message? alert(result.message) :null;
       if (result.errors) {
         for (const error of result.errors) {
+          alert(error.msg);
           console.error(error);
         }
       }
@@ -38,9 +39,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     if (response.ok)
       window.location.href = '/'; // Redirect to test page
     else {
-      result.message? alert(result.message) : alert('Invalid credentials');
+      result.message? alert(result.message) : null;
       if (result.errors) {
         for (const error of result.errors) {
+          alert(error.msg);
           console.error(error);
         }
       }

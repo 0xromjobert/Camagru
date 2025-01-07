@@ -31,6 +31,10 @@ document.getElementById('logout').addEventListener('click', async() => {
     }
 });
 
+document.getElementById('edit').addEventListener('click', ()=>{
+    window.location.href = '/profile/edit';
+});
+
 function buildTable(data){
     try {
         const table = document.createElement('table');
