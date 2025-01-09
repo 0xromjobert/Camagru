@@ -1,6 +1,7 @@
 const { authToken } = require('../middleware/tokenJWT');
 const {validateDynamic} = require('../middleware/authValidator');
 const {getUserById} = require('../models/User');
+const bcrypt = require('bcrypt');
 const { query } = require('../config/database');
 
 const express = require('express');
@@ -41,18 +42,22 @@ router.post('/edit', authToken, validateDynamic, async (req, res) => {
         const updates = {};
         if (username) updates.username = username;
         if (email) updates.email = email;
-        if (password) updates.password = password;
+        if (password){
+            const salt = await bcrypt.genSalt(10);
+            const hashPassword = await bcrypt.hash(password, salt);
+            updates.password = hashPassword;
+        }
  
          // Ensure at least one field is provided
          if (Object.keys(updates).length === 0) {
-             return res.status(401).json({ message: "At least one field must be filled!" });
+             return res.json({status: 'error', code: 400,message: "At least one field must be filled!"});
         }
 
         // Perform the update
         const updatedUser = await updateUserFields(req.user.user_id, updates);
 
         if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found or update failed.' });
+            return res.status(200).json({ message: 'User not found or update failed.' });
         }
         res.status(200).json({
             message: 'User details updated successfully!',

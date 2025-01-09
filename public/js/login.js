@@ -1,3 +1,5 @@
+import { showAlert } from "./alertComponent.js";
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
   
@@ -10,16 +12,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       }),
       headers: { 'Content-Type': 'application/json' },
     });
-    console.log(response);
     const result = await response.json();
     if (response.ok)
       window.location.href = '/profile'; // Redirect to page
     else {
-      result.message? alert(result.message) :null;
+      result.message? showAlert(result.message) :null;
       if (result.errors) {
         for (const error of result.errors) {
-          alert(error.msg);
-          console.error(error);
+          showAlert(error.msg);
         }
       }
     }
@@ -34,16 +34,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({email: formData.get('email')}),
       headers: { 'Content-Type': 'application/json' },
     })
-    console.log(response);
     const result = await response.json();
     if (response.ok)
       window.location.href = '/'; // Redirect to test page
     else {
-      result.message? alert(result.message) : null;
+      result.message? showAlert(result.message) : null;
       if (result.errors) {
         for (const error of result.errors) {
-          alert(error.msg);
-          console.error(error);
+          showAlert(error.msg);
         }
       }
     }

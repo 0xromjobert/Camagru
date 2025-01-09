@@ -1,4 +1,5 @@
 import { fetchWithAuth  } from "./utils.js";
+import { showAlert } from './alertComponent.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const resp = await fetchWithAuth('/api/user/userinfo');
@@ -9,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
         else
         {
-            document.getElementById('welcomeMessage').innerText = `you are logged in ${data.username}!`;
+            document.getElementById('welcomeMessage').innerHTML = `you are now logged in <b>${data.username}</b>, you can like and comment pictures, as well as adding your own !`;
             if (data.created_at)
                 data.created_at = new Date(data.created_at).toLocaleString();
             buildTable(data);
@@ -23,11 +24,10 @@ document.getElementById('logout').addEventListener('click', async() => {
         if (resp.ok)
             window.location.href = '/auth/login'; // Redirect to login page
         else
-            alert('Failed to log out.');
+            showAlert('Failed to log out.');
     }
     catch(error) {
-        console.error('Logout error:', error);
-        alert('An unexpected error occurred.');
+        showAlert('An unexpected error occurred.');
     }
 });
 
@@ -35,33 +35,44 @@ document.getElementById('edit').addEventListener('click', ()=>{
     window.location.href = '/profile/edit';
 });
 
-function buildTable(data){
+function buildTable(data) {
     try {
-        const table = document.createElement('table');
-        table.setAttribute('border', '1'); // Add borders for clarity
-
-        //adding header
-        const headerRow = document.createElement('tr');
-        Object.keys(data).forEach((key) => {
-            const th = document.createElement('th');
-            th.innerText = key.replace('_', ' ').toUpperCase(); // Capitalize and format keys
-            table.appendChild(headerRow);
-            headerRow.appendChild(th);
-        });
-
-        // Add table row for data
-        const dataRow = document.createElement('tr');
-        Object.values(data).forEach((value) => {
-               const td = document.createElement('td');
-               td.innerText = value;
-               dataRow.appendChild(td);
-           });
-           table.appendChild(dataRow);
-           // Insert table into the DOM
-           document.getElementById('userInfoTable').appendChild(table);
-       } 
-       catch (error) {
-           console.error('Error loading user information:', error);
-           alert('Failed to load user information.');
+      // Create the table element
+      const table = document.createElement('table');
+      table.className = 'table table-bordered table-striped-columns table-hover'; // Add Bootstrap classes
+  
+      // Create the table body
+      const tbody = document.createElement('tbody');
+  
+      // Loop through the data object
+      Object.entries(data).forEach(([key, value]) => {
+        // Create a new row for each key-value pair
+        const row = document.createElement('tr');
+  
+        // Create the field (left element)
+        const fieldCell = document.createElement('td');
+        fieldCell.innerText = key.replace('_', ' ').toUpperCase(); // Format key
+        fieldCell.className = 'fw-bold'; // Bootstrap class for bold text
+        row.appendChild(fieldCell);
+  
+        // Create the value (right element)
+        const valueCell = document.createElement('td');
+        valueCell.innerText = value; // Add the value
+        row.appendChild(valueCell);
+  
+        // Append the row to the tbody
+        tbody.appendChild(row);
+      });
+  
+      // Append tbody to the table
+      table.appendChild(tbody);
+  
+      // Insert the table into the DOM
+      const container = document.getElementById('userInfoTable');
+      container.innerHTML = ''; // Clear existing content
+      container.appendChild(table);
+    } catch (error) {
+      showAlert('Failed to load user information.');
     }
-}
+  }
+  

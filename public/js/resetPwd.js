@@ -1,3 +1,4 @@
+import { showAlert } from './alertComponent.js';
 document.getElementById('resetForm').addEventListener('submit', async (e)=>{
 
     e.preventDefault();
@@ -10,18 +11,16 @@ document.getElementById('resetForm').addEventListener('submit', async (e)=>{
         headers: { 'Content-Type': 'application/json' },
     });
     const data = await resp.json();
-    console.log(data);
     if (resp.ok)
     {
-        alert(data.message);
+        showAlert(data.message);
         window.location.href = '/auth/login';
     }
     else {
-        data.message? alert(data.message): null;
+        data.message? showAlert(data.message): null;
         if (data.errors){
             for (const error of data.errors){
-                alert(error.msg);
-                console.log(error);
+                showAlert(error.msg);
             }
         }
     }

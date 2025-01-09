@@ -1,3 +1,4 @@
+import { showAlert } from './alertComponent.js';
 document.getElementById('SignupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
   
@@ -14,15 +15,14 @@ document.getElementById('SignupForm').addEventListener('submit', async (e) => {
   
     const result = await response.json();
     if (response.ok) {
-      alert(result.message);
+      showAlert(result.message);
       window.location.href = '/auth/login'; // Redirect to edit page
     } 
     else {
-      result.message? alert(result.message) : null;
+      result.message? showAlert(result.message) : null;
       if (result.errors) {
         for (const error of result.errors) {
-        console.error(error);
-        alert(error.msg);
+        showAlert(error.msg);
       }
     }
   }

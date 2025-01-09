@@ -23,7 +23,7 @@ app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.sendfile(path.join(__dirname,'../public/idex.html'));
 });
 
 module.exports = app;

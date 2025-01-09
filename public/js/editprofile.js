@@ -1,3 +1,5 @@
+import { showAlert } from "./alertComponent.js";
+
 document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
   
@@ -11,15 +13,19 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
       }),
       headers: { 'Content-Type': 'application/json' },
     });
-    console.log(response);
     const result = await response.json();
-    if (response.ok)
+    console.log('resp',response);
+    console.log('resp ok',response.ok);
+    console.log('result',result);
+    if (response.ok && result.code !== 400){
       window.location.href = '/profile'; // Redirect to profile page
+    }
     else {
-      result.message? alert(result.message) : null;
+      console.log('the error message is',result.message)
+      result.message? showAlert(result.message) : null;
       if (result.errors) {
         for (const error of result.errors) {
-            alert(error.msg);  
+            showAlert(error.msg);  
             console.error(error);
         }
       }
