@@ -3,6 +3,8 @@ const authRoutes = require('./routes/authPages');
 const profileRoutes = require('./routes/profile');
 const authAPI = require('./api/auth');
 const userAPI = require('./api/userPage')
+const imageAPI = require('./api/images')
+const galleryRoutes = require('./routes/gallery')
 const path = require('path');
 const app = express();
 const cookieparser = require('cookie-parser');
@@ -17,13 +19,12 @@ app.use(express.static(path.join(__dirname,'../public')));
 //mounting api routes
 app.use('/api/auth', authAPI);
 app.use('/api/user', userAPI);
+app.use('/api/images', imageAPI);
 
 // Mount the auth routes at a specific path for html Pages
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 
-app.get('/', (req, res) => {
-  res.sendfile(path.join(__dirname,'../public/idex.html'));
-});
+app.use('/', galleryRoutes); //binding the home to the galleryRoutes
 
 module.exports = app;

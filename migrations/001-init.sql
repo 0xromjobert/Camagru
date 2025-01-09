@@ -42,3 +42,13 @@ CREATE INDEX idx_comments_image_id ON comments(image_id); -- Index on image_id i
 CREATE INDEX idx_likes_image_id ON likes(image_id); -- Index on image_id in likes
 CREATE INDEX idx_likes_user_id ON likes(user_id);   -- Index on user_id in likes
 
+-- Insert a user
+INSERT INTO users (username, email, password, is_confirmed)
+VALUES ('bob', 'testuser@example.com', '$2b$10$BGaTdUy.ojs9LROoXMW/BOnT5Z9n28h7y/4joLBdfnoV8OU/T36oe', TRUE);
+
+-- Insert images and associate them with the user
+INSERT INTO images (title, url, user_id)
+VALUES 
+    ('Image 1', '/gallery/1.jpg', 1),
+    ('Image 2', '/gallery/2.jpg', 1),
+    ('Image 3', '/gallery/3.jpg', 1);

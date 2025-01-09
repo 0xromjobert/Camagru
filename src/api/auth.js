@@ -35,7 +35,7 @@ Endpoint used as state checkup (for front page) if logged in correctly or not
 */
 router.get('/status', authToken, async (req, res) =>{
     if (!req.user)
-        return res.status(200).json({'logggedIn':false});
+        return res.status(200).json({'loggedIn':false});
     return res.status(200).json({'loggedIn':true});
 })
 
