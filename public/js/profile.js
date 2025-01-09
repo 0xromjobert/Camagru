@@ -1,5 +1,5 @@
 import { fetchWithAuth  } from "./utils.js";
-import { showAlert } from './alertComponent.js';
+import { showAlert } from "./components/alertComponent.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const resp = await fetchWithAuth('/api/user/userinfo');

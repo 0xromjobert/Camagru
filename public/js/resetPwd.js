@@ -1,4 +1,5 @@
-import { showAlert } from './alertComponent.js';
+import { showAlert } from "./components/alertComponent.js";
+
 document.getElementById('resetForm').addEventListener('submit', async (e)=>{
 
     e.preventDefault();

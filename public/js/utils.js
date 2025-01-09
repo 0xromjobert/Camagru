@@ -1,4 +1,5 @@
-import { showAlert } from './alertComponent.js';
+import { showAlert } from "./components/alertComponent.js";
+
 export async function fetchWithAuth(url, options = {}){
     console.log("in fetch with auth");
     const resp = fetch(url, options);

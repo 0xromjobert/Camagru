@@ -1,55 +1,81 @@
-/* Flexbox: Center the whole page */
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
-  }
-  
-  /* Grid: Organize the form and texts */
-  div {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 2rem;
-    background: #ffffff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-  }
-  
-  /* Form inputs and buttons */
-  form input,
-  form button {
-    display: block;
+/*All this is to make a dynamic navbar without using bootstrap JS [risk with the subject about hidden JS]*/
+/* General Navbar Styling */
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar-links {
+  display: flex;
+}
+
+.navbar-links ul {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links ul li a {
+  text-decoration: none;
+  color: #333;
+  font-size: 1rem;
+}
+
+.navbar-links ul li a:hover {
+  color: #007bff;
+}
+
+.text-danger {
+  color: red;
+}
+
+/* Responsive Behavior */
+.navbar-toggler {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Mobile View: Show toggle button and hide links */
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
     width: 100%;
-    padding: 0.8rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+    padding: 1rem 0;
+    border-top: 1px solid #ddd;
   }
-  
-  form button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
+
+  .navbar-links-visible {
+    display: flex;
   }
-  
-  form button:hover {
-    background-color: #0056b3;
+
+  .navbar-toggler {
+    display: block;
   }
-  
-  /* Links */
-  a {
-    color: #007bff;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-  }
-  
+}
+
+.custom-width {
+  width: 80%;
+}

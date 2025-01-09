@@ -7,20 +7,38 @@ const secret = process.env.SECRET_KEY;
 //to take off after testing
 console.log("Loaded SECRET_KEY:", process.env.SECRET_KEY, "vs ", secret);
 
+/*
+main function to auth with a twist on absent logged in so it can be used as state as well
+*/
 function authToken(req, res, next) {
     try {
         const token = req.cookies.authToken;
-        if (!token)
-            return res.status(401).json({message: "Missing token"});
-        const payload = verifyJWT(token);
-        if (!payload)
-            return res.status(401).json({message: "Invalid token"});
-        req.user = payload; //we add the payload to request
+
+        if (!token) {
+            // No token: Treat as not logged in
+            req.user = null;
+            return next();
+        }
+
+        const payload = verifyJWT(token); // Verifies and decodes the token
+        if (!payload) {
+            // Invalid or expired token: clear cookie and inform the client
+            res.clearCookie('authToken');
+            return res.status(403).json({
+                error: 403,
+                message: "Invalid or expired credentials. Please login again."
+            });
+        }
+
+        // Token is valid, attach user info to req
+        req.user = payload;
         next();
-    }
-    catch(error) {
+
+    } catch (error) {
         console.error("Error validating token:", error);
-        return res.status(401).json({message: "Invalid token"});
+        // Treat as not logged in for unexpected errors
+        req.user = null;
+        next();
     }
 }
 

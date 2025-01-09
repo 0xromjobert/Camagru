@@ -29,6 +29,16 @@ router.get('/verify', async (req, res) => {
     return res.status(400).json({message: 'Email verification failed'});
 });
 
+/* 
+Endpoint used as state checkup (for front page) if logged in correctly or not 
+-> should be used with credentials:true as it is a get
+*/
+router.get('/status', authToken, async (req, res) =>{
+    if (!req.user)
+        return res.status(200).json({'logggedIn':false});
+    return res.status(200).json({'loggedIn':true});
+})
+
 //***************************************RESET PASSWORD ENDPOINTS ***********************************************
 
 /*

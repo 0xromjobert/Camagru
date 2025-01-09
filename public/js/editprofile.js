@@ -1,4 +1,4 @@
-import { showAlert } from "./alertComponent.js";
+import { showAlert } from "./components/alertComponent.js";
 
 document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
