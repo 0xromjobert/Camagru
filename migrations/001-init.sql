@@ -47,8 +47,20 @@ INSERT INTO users (username, email, password, is_confirmed)
 VALUES ('bob', 'testuser@example.com', '$2b$10$BGaTdUy.ojs9LROoXMW/BOnT5Z9n28h7y/4joLBdfnoV8OU/T36oe', TRUE);
 
 -- Insert images and associate them with the user
+INSERT INTO images (title, url, user_id, created_at)
+VALUES 
+    ('Image 1', '/gallery/1.jpg', 1, '2025-01-14T19:18:52.829Z'),
+    ('Image 2', '/gallery/2.jpg', 1, '2025-01-14T19:18:52.829Z'),
+    ('Image 3', '/gallery/3.jpg', 1, '2025-01-14T19:18:52.829Z');
+
+/*different operations for diff timestamp */
 INSERT INTO images (title, url, user_id)
 VALUES 
-    ('Image 1', '/gallery/1.jpg', 1),
-    ('Image 2', '/gallery/2.jpg', 1),
-    ('Image 3', '/gallery/3.jpg', 1);
+    ('Spacex 1', '/gallery/sp1.jpg', 1),
+    ('Spacex 2', '/gallery/sp2.jpg', 1),
+    ('Spacex 3', '/gallery/sp3.jpg', 1),
+    ('Spacex 4', '/gallery/sp4.jpg', 1),
+    ('Spacex 5', '/gallery/sp5.jpg', 1),
+    ('Spacex 6', '/gallery/sp6.jpg', 1),
+    ('Spacex 7', '/gallery/sp7.jpg', 1),
+    ('Spacex 8', '/gallery/sp8.jpg', 1);

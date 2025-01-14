@@ -79,3 +79,43 @@
 .custom-width {
   width: 80%;
 }
+
+/* FOR THE Gallert Divs */
+/* Ensure proper spacing and alignment for the gallery */
+/* Container for the gallery images */
+.card-img-container {
+  height: 200px; /* Fixed height for all images */
+  overflow: hidden; /* Ensure no overflow */
+  border-radius: 15px; /* Rounded corners for a polished look */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Image styling */
+.card-img-container img {
+  width: 100%; /* Stretch to container width */
+  height: 100%; /* Stretch to container height */
+  object-fit: cover; /* Maintain aspect ratio and crop excess */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effects */
+}
+
+/* Hover effect for images */
+.card-img-container img:hover {
+  transform: scale(1.05); /* Slight zoom-in on hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+/* Optional: Padding between cards */
+.image-card {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Pagination button styles */
+.pagination button {
+  min-width: 40px;
+  padding: 5px 10px;
+  font-size: 14px;
+}
