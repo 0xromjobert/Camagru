@@ -1,5 +1,9 @@
 /*All this is to make a dynamic navbar without using bootstrap JS [risk with the subject about hidden JS]*/
-/* General Navbar Styling */
+
+
+
+/******************************General Navbar, Footer and main body Styling *****************************/
+
 .navbar {
   background-color: white;
   border-bottom: 1px solid #ddd;
@@ -80,30 +84,70 @@
   width: 80%;
 }
 
+#pagination {
+  margin-bottom: 10px !important; /* Reduce margin between buttons and footer */
+}
+
+/* Footer should hug the bottom of the viewport */
+footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+footer p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Ensure body and html fill the viewport */
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main should grow to push the footer down */
+main {
+  flex-grow: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start center; /* Prevents unnecessary vertical growth */
+}
+
+/********************************* Gallery Style ***********************************************/
+
 /* FOR THE Gallert Divs */
 /* Ensure proper spacing and alignment for the gallery */
 /* Container for the gallery images */
 .card-img-container {
-  height: 200px; /* Fixed height for all images */
-  overflow: hidden; /* Ensure no overflow */
-  border-radius: 15px; /* Rounded corners for a polished look */
+  aspect-ratio: 3 / 4; /* Maintain aspect ratio of 3:4 */
+  overflow: hidden;
+  border-top-left-radius:15px;
+  border-top-right-radius: 15px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Image styling */
 .card-img-container img {
-  width: 100%; /* Stretch to container width */
-  height: 100%; /* Stretch to container height */
-  object-fit: cover; /* Maintain aspect ratio and crop excess */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effects */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* Hover effect for images */
-.card-img-container img:hover {
+/* 
+2 followings are used too make hover on the card 
+*/
+.image-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth animation for scaling and shadow */
+}
+
+.image-card:hover {
   transform: scale(1.05); /* Slight zoom-in on hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
 }
 
 /* Optional: Padding between cards */
@@ -113,9 +157,62 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
+#gallery {
+  margin-top: 10px; /* Adjust as needed */
+  padding: 0;
+}
+
 /* Pagination button styles */
 .pagination button {
   min-width: 40px;
   padding: 5px 10px;
   font-size: 14px;
+}
+
+
+/* Enhanced placeholder styling */
+.placeholder {
+  width: 100%;
+  height: 100%; /* Match the expected image height */
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%; /* Make the gradient larger to create movement */
+  border-radius: 15px; /* Match the card's rounded corners */
+  animation: loading 1.5s infinite; /* Smooth gradient movement */
+}
+
+/* Keyframes for gradient animation */
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/***************************** ICON PAGE PART ************************/
+/* Like Button Styling */
+.like-button {
+  background: none; /* Remove default button background */
+  border: none; /* Remove default button border */
+  cursor: pointer; /* Change cursor to pointer */
+  padding: 0; /* Remove button padding */
+  display: flex;
+  align-items: center;
+}
+
+.like-icon {
+  width: 20px; /* Adjust size of the like icon */
+  height: 20px; /* Keep it proportional */
+  transition: transform 0.2s ease; /* Smooth hover effect */
+}
+
+.like-icon:hover {
+  transform: scale(1.2); /* Slight zoom effect on hover */
+}
+
+.like-count {
+  font-size: 0.9rem; /* Adjust font size */
+  color: #333; /* Text color for like count */
 }

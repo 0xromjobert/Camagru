@@ -83,4 +83,24 @@ class NavBar extends HTMLElement {
   customElements.define("nav-bar", NavBar);
   
   
-  
+
+class SiteFooter extends HTMLElement {
+    constructor() {
+        super();
+    }
+
+    connectedCallback() {
+        this.innerHTML = `
+            <footer class="text-center py-3">
+                <div class="container">
+                    <p class="mb-0">
+                        &copy; 2025 Camagru. Built by rjobert @42.
+                    </p>
+                </div>
+            </footer>
+        `;
+    }
+}
+
+// Define the custom element
+customElements.define('site-footer', SiteFooter);

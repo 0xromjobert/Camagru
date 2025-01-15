@@ -18,7 +18,6 @@ class GalleryFeed extends HTMLElement {
             if (!response.ok) throw new Error('Failed to fetch images');
 
             const data = await response.json();
-            //console.log("loaded data are", data);
             const gallery = this.querySelector('#gallery');
             gallery.innerHTML = ''; // Clear previous images
 
@@ -28,11 +27,30 @@ class GalleryFeed extends HTMLElement {
                 col.className = 'col-12 col-sm-6 col-md-4'; // Responsive grid layout
                 col.innerHTML = `
                 <div class="card h-100 border-0 shadow-sm image-card">
-                <a href="/image/${image.id}" class="d-block">
+                    <!-- Image -->
                     <div class="card-img-container">
-                        <img src="${image.url}" class="card-img-top" alt="${image.title}">
+                        <div class="placeholder"></div> <!-- Placeholder -->
+                        <img src="${image.url}" class="card-img-top d-none" alt="${image.title}" onload="this.classList.remove('d-none'); this.previousElementSibling.style.display='none';">
                     </div>
-                </a>
+                <!-- Card Body -->
+                <div class="card-body d-flex justify-content-start align-items-center py-2 gap-3">
+                    <div class="d-flex align-items-center">
+                        <button class="like-button">
+                            <img src="./assets/like.png" alt="Like" class="like-icon">
+                        </button>
+                        <span class="like-count ms-1">123</span> <!-- Likes -->
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button class="like-button">
+                            <img src = "./assets/comment.png" alt="comment" class="like-icon">
+                        </button>
+                        <span class="like-count ms-1">45</span> <!-- Comments -->
+                    </div>
+                </div>
+                <!-- Card Footer -->
+                <div class="card-footer bg-light p-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="Add a comment...">
+                </div>
             </div>
         `;
                 gallery.appendChild(col);
