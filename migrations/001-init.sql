@@ -20,7 +20,7 @@ CREATE TABLE images (
 -- Create the comments table
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY,                -- Auto-incrementing primary key
-    text TEXT NOT NULL,                   -- Comment text
+    comments TEXT NOT NULL,                   -- Comment text
     image_id INT REFERENCES images(id) ON DELETE CASCADE, -- Foreign key to images table
     user_id INT REFERENCES users(id) ON DELETE CASCADE,   -- Foreign key to users table
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set creation time
@@ -49,18 +49,28 @@ VALUES ('bob', 'testuser@example.com', '$2b$10$BGaTdUy.ojs9LROoXMW/BOnT5Z9n28h7y
 -- Insert images and associate them with the user
 INSERT INTO images (title, url, user_id, created_at)
 VALUES 
-    ('Image 1', '/gallery/1.jpg', 1, '2025-01-14T19:18:52.829Z'),
-    ('Image 2', '/gallery/2.jpg', 1, '2025-01-14T19:18:52.829Z'),
-    ('Image 3', '/gallery/3.jpg', 1, '2025-01-14T19:18:52.829Z');
+    ('Image 1', '/gallery/1.jpg', 1, '2025-01-14T10:00:00.000Z'),
+    ('Image 2', '/gallery/2.jpg', 1, '2025-01-14T11:00:00.000Z'),
+    ('Image 3', '/gallery/3.jpg', 1, '2025-01-14T12:00:00.000Z');
 
-/*different operations for diff timestamp */
-INSERT INTO images (title, url, user_id)
+-- Different operations with distinct timestamps
+INSERT INTO images (title, url, user_id, created_at)
 VALUES 
-    ('Spacex 1', '/gallery/sp1.jpg', 1),
-    ('Spacex 2', '/gallery/sp2.jpg', 1),
-    ('Spacex 3', '/gallery/sp3.jpg', 1),
-    ('Spacex 4', '/gallery/sp4.jpg', 1),
-    ('Spacex 5', '/gallery/sp5.jpg', 1),
-    ('Spacex 6', '/gallery/sp6.jpg', 1),
-    ('Spacex 7', '/gallery/sp7.jpg', 1),
-    ('Spacex 8', '/gallery/sp8.jpg', 1);
+    ('Spacex 1', '/gallery/sp1.jpg', 1, '2025-01-15T08:00:00.000Z'),
+    ('Spacex 2', '/gallery/sp2.jpg', 1, '2025-01-15T09:00:00.000Z'),
+    ('Spacex 3', '/gallery/sp3.jpg', 1, '2025-01-15T10:00:00.000Z'),
+    ('Spacex 4', '/gallery/sp4.jpg', 1, '2025-01-15T11:00:00.000Z'),
+    ('Spacex 5', '/gallery/sp5.jpg', 1, '2025-01-15T12:00:00.000Z'),
+    ('Spacex 6', '/gallery/sp6.jpg', 1, '2025-01-15T13:00:00.000Z'),
+    ('Spacex 7', '/gallery/sp7.jpg', 1, '2025-01-15T14:00:00.000Z'),
+    ('Spacex 8', '/gallery/sp8.jpg', 1, '2025-01-15T15:00:00.000Z');
+
+INSERT INTO likes (image_id, user_id)
+VALUES
+    (8,1),
+    (6,1);
+
+INSERT INTO comments (comments, image_id, user_id)
+VALUES
+    ('incredible image - where was this?',9,1),
+    ('I loooove it - reminds me o my childhood', 6,1);
