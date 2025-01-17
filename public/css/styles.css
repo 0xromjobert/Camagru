@@ -216,3 +216,52 @@ main {
   font-size: 0.9rem; /* Adjust font size */
   color: #333; /* Text color for like count */
 }
+
+/****************************** Comments Style *******************/
+
+.comments-section {
+  /*border-top: 1px solid #ddd; /* Separator line */
+  padding-top: 5px; /* Spacing for comments */
+  align-items: center; /* Center horizontally */
+  text-align: center; /* Center text and inline elements */
+  max-height: 80%; /* Optional: limit height for large lists */
+  overflow-y: auto; /* Add scroll for large lists */
+  font-size: 0.9rem; /* Smaller font for comments */
+  /*Animation*/
+  opacity: 0; /* Start hidden */
+  transform: translateY(-5px); /* Slightly move up initially */
+  transition: opacity 0.1s ease, transform 0.1s ease; /* Smooth transition for opacity and position */
+}
+
+.comments-section.visible {
+  opacity: 1; /* Fully visible */
+  transform: translateY(0); /* Move to normal position */
+}
+
+.comment {
+  background-color: #f8f9fa; /* Light background color */
+  border: 1px solid #ddd; /* Light border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px; /* Padding inside the comment box */
+  margin-bottom: 10px; /* Space between comments */
+  display: flex;
+  flex-direction: column; /* Stack text and date */
+  position: relative; /* For date positioning */
+}
+
+.comment:last-child {
+  margin-bottom: 0; /* Remove margin for the last comment */
+}
+
+.comment .text-muted {
+  font-size: 0.8rem; /* Smaller font for date */
+  color: #6c757d; /* Muted text color */
+  align-self: flex-end; /* Align date to bottom-right */
+  margin-top: 5px; /* Space between text and date */
+}
+
+.btn-close {
+  align-self: center; /* Center the button horizontally */
+  display: inline-block; /* Ensure proper centering */
+  margin-bottom: 10px; /* Add spacing below the button */
+}

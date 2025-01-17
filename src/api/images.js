@@ -6,6 +6,10 @@ const fs = require('fs').promises; // Use fs.promises for async operations
 
 const router = express.Router();
 
+/*
+Generic endpoint : return all the iamges given a page and limit (passed as params)
+used asa offset on query database image as offset and result limit
+*/
 router.get('/', async (req, res) => {
     const galleryFolder = path.join(__dirname, '../../gallery'); // Path to the folder
     const page = parseInt(req.query.page) || 1; // Default to page 1
@@ -52,7 +56,6 @@ router.get('/', async (req, res) => {
             total: totalImg,
             images,
         });
-        console.log(images);
     } catch (err) {
         console.error('Error fetching images:', err);
         res.status(500).json({ error: 'Failed to load images' });
@@ -60,7 +63,7 @@ router.get('/', async (req, res) => {
 });
 
 /* 
-GET endpoint for a spefici url 
+GET endpoint for a spefici url -> returnn the image
 */
 router.get('/:filename', async (req, res) => {
     const galleryFolder = path.join(__dirname, '../../gallery');
@@ -101,6 +104,33 @@ router.get('/like/:imageId', authToken, async (req, res) => {
     }
 });
 
+router.post('/like/:imageId', authToken, async (req, res) => {
+    try {
+        //if user not logged in -> return json with error message passed to alert, otherwise update the like db
+        if (!req.user)
+            return res.status(401).json({message:'You must be logged in to like'});
+        const imgId = req.params.imageId;
+        const userId = req.user.user_id;
+
+        //checking if user liked the query
+        const qry = await query("SELECT 1 FROM likes WHERE user_id = $1 AND image_id = $2;", [userId, imgId]);
+        
+        //case where the user already liked the img -> unlike
+        if (qry.rows.length > 0){
+            await query("DELETE FROM likes WHERE user_id = $1 AND image_id = $2;", [userId, imgId]);
+            return res.status(200).json({message:"image unliked"});
+        }
+
+        //case he hasn't -> like it
+        await query("INSERT INTO likes (user_id, image_id) VALUES ($1, $2);", [userId, imgId]);
+        return res.status(201).json({message:'image liked'});
+    }
+    catch(error){
+        console.error("error on liking image", error);
+        return res.status(500).json({message:error});
+    }
+});
+
 
 router.get('/comment/t/:Id', async (req, res) => {
     try {
@@ -120,15 +150,15 @@ router.get('/comment/t/:Id', async (req, res) => {
 
 router.get('/comment/:Id', async (req, res) => {
     try {
-        const { Id } = req.params;
+        const Id  = req.params.Id;
 
         // Fetch all comments with usernames
         const commentResult = await query(`
-            SELECT comments.text, comments.created_at, users.username 
-            FROM comments 
-            JOIN users ON comments.user_id = users.id 
-            WHERE comments.image_id = $1
-            ORDER BY comments.created_at ASC
+            SELECT comment, c.created_at, u.username 
+            FROM comments c
+            JOIN users u ON c.user_id = u.id 
+            WHERE c.image_id = $1
+            ORDER BY c.created_at ASC;
         `, [Id]);
 
         if (!commentResult || commentResult.rows.length === 0) {
@@ -138,14 +168,46 @@ router.get('/comment/:Id', async (req, res) => {
         // Format the results
         const comments = commentResult.rows.map((row) => ({
             user: row.username,
-            text: row.text,
+            comment: row.comment,
             at: new Date(row.created_at),
         }));
-
         res.status(200).json({ comments });
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: "Server error", error: error.message });
+    }
+});
+
+router.post('/comment/:id', authToken, async (req, res) => {
+    try {
+        //if user not logged in -> return json with error message passed to alert, otherwise update the like db
+        if (!req.user)
+            return res.status(401).json({message:'You must be logged in to comment'});
+        const {comment} = req.body;
+        const imageId = req.params.id;
+        const userId = req.user.user_id;
+        
+        // Validate the comment
+        if (!comment || comment.trim() === '') {
+            return res.status(400).json({ message: 'Comment cannot be empty.' });
+        }
+        if (comment.length > 500) {
+            return res.status(400).json({ message: 'Comment is too long (max 500 characters).' });
+        }
+
+        // Validate the imageId
+        const imageCheck = await query("SELECT 1 FROM images WHERE id = $1", [imageId]);
+        if (imageCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'Image not found.' });
+        }
+        
+        //ALL goood -> insert in the Db
+        await query("INSERT INTO comments (user_id, comment, image_id) VALUES ($1, $2, $3);", [userId, comment, imageId]);
+        return res.status(201).json({message:'image commented'});
+    }
+    catch(error){
+        console.error("error on liking image", error);
+        return res.status(500).json({message:error});
     }
 });
 

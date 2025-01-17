@@ -5,7 +5,6 @@ const {sendEmail} = require('./emailHelper');
 
 const signup = async (req, res) => {
     // Validate input
-    console.log("body is ", req.body);
     const { username, email, password } = req.body;
     if (!username || !email || !password){
         return res.status(401).json({ message: 'All fields are required' });

@@ -83,7 +83,6 @@ async function resetPassword(req, res) {
     try {
         if (!req.user) //coming from middleware authToken
             return res.status(401).json({message: 'Unauthorized'});
-        console.log('in reset pwd POST body is',req.body);
         if (!req.body.password || !req.body.confirmPassword) {
             return res.status(401).json({message: 'All fields are required'});
         }
@@ -94,10 +93,8 @@ async function resetPassword(req, res) {
         if (!user || user.rows.length === 0) {
             return res.status(404).json({message: 'User not found'});
         }
-        console.log('User:', user.rows[0]);
         const salt = await bcrypt.genSalt(10);
         const hashPassword = await bcrypt.hash(req.body.password, salt);
-        console.log('password:', hashPassword);
         await query('UPDATE users SET password = $1 WHERE id = $2', [hashPassword, user.rows[0].id]);
         res.status(200).json({message: 'Password reset successful'});
     }catch (error) {
@@ -122,7 +119,6 @@ return either fail status with message or sucess with token
 */
 async function verifyResetToken(linkToken) {
     const payload = verifyJWT(linkToken);
-    console.log('in verify reset token pauload', payload);
     if (!payload || payload.purpose !== 'password_reset') {
         return { status: false, message: 'Invalid or expired token' };
     }

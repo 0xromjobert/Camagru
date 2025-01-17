@@ -20,17 +20,17 @@ CREATE TABLE images (
 -- Create the comments table
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY,                -- Auto-incrementing primary key
-    comments TEXT NOT NULL,                   -- Comment text
-    image_id INT REFERENCES images(id) ON DELETE CASCADE, -- Foreign key to images table
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,   -- Foreign key to users table
+    comment TEXT NOT NULL,                   -- Comment text
+    image_id INT REFERENCES images(id) ON DELETE CASCADE NOT NULL, -- Foreign key to images table
+    user_id INT REFERENCES users(id) ON DELETE CASCADE NOT NULL,   -- Foreign key to users table
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set creation time
 );
 
 -- Create the likes table
 CREATE TABLE likes (
     id SERIAL PRIMARY KEY,                -- Auto-incrementing primary key
-    image_id INT REFERENCES images(id) ON DELETE CASCADE, -- Foreign key to images table
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,   -- Foreign key to users table
+    image_id INT REFERENCES images(id) ON DELETE CASCADE NOT NULL, -- Foreign key to images table
+    user_id INT REFERENCES users(id) ON DELETE CASCADE NOT NULL,   -- Foreign key to users table
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set creation time
 );
 
@@ -70,7 +70,9 @@ VALUES
     (8,1),
     (6,1);
 
-INSERT INTO comments (comments, image_id, user_id)
+INSERT INTO comments (comment, image_id, user_id)
 VALUES
     ('incredible image - where was this?',9,1),
-    ('I loooove it - reminds me o my childhood', 6,1);
+    ('I loooove it - reminds me o my childhood', 6,1),
+    ('This is Spacex?',6,1),
+    ('would love to assist?',6,1);
