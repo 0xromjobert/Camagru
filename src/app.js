@@ -5,6 +5,7 @@ const authAPI = require('./api/auth');
 const userAPI = require('./api/userPage')
 const imageAPI = require('./api/images')
 const galleryRoutes = require('./routes/gallery')
+const cameraRoutes = require('./routes/camera');
 const path = require('path');
 const app = express();
 const cookieparser = require('cookie-parser');
@@ -24,6 +25,7 @@ app.use('/api/images', imageAPI);
 // Mount the auth routes at a specific path for html Pages
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
+app.use('/camera', cameraRoutes);
 
 app.use('/', galleryRoutes); //binding the home to the galleryRoutes
 

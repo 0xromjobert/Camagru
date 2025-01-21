@@ -33,7 +33,7 @@ class NavBar extends HTMLElement {
         // Create "Edit Content" button
         const liEdit = document.createElement("li");
         const editLink = document.createElement("a");
-        editLink.setAttribute("href", "/editcontent");
+        editLink.setAttribute("href", "/camera");
         editLink.innerText = "Camera";
         liEdit.appendChild(editLink);
         navButtons.appendChild(liEdit);
