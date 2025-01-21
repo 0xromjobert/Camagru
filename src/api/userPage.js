@@ -80,11 +80,10 @@ async function updateUserFields(userId, updates) {
 
     // Build the dynamic SQL query
     const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
-    console.log("in EDIT PROFILE ENDPOINT the sql clause is", setClause);
 
     // Add a parameterized placeholder for userId
     const sql = `UPDATE users SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`;
-    console.log("and the QUERY is", sql);
+
 
 
     // Add the userId to the parameters
@@ -94,5 +93,35 @@ async function updateUserFields(userId, updates) {
     return result.rows[0]; // Return the updated user object
 }
 
+
+router.get('/notif', authToken, async (req, res) => {
+    try{
+        const userId = req.user.user_id;
+        if (!userId)
+            return res.status(401).json({message: "please login to access notif status"});
+        const notif = await query("SELECT has_notif FROM users WHERE id = $1", [userId]);
+        return res.status(200).json({notif_status:notif.rows[0]});
+    }
+    catch (error){
+        console.error("error getting notif", error);
+        res.status(500).json({Error:error});
+    }
+})
+
+router.post('/notif', authToken, async (req, res) => {
+    try{
+        const userId = req.user.user_id;
+        if (!userId)
+            return res.status(401).json({message: "please login to access notif status"});
+        const notif = req.body.notif_status;
+        await query("UPDATE users SET has_notif = $2 WHERE id = $1", [userId, notif]);
+        const rst = await query("SELECT * FROM users WHERE id = $1", [userId]);
+        return res.status(200).json({notif_status:notif});
+    }
+    catch (error){
+        console.error("error getting notif", error);
+        res.status(500).json({Error:error});
+    }
+})
 
 module.exports = router; 

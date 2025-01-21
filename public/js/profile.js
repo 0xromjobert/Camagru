@@ -75,4 +75,65 @@ function buildTable(data) {
       showAlert('Failed to load user information.');
     }
   }
-  
+
+/* 
+Function for yes/no form checck slider update
+*/
+async function loadNotifPref() {
+    try {
+        const resp = await fetch("/api/user/notif");
+        if (!resp.ok) throw new Error("Failed to fetch notification preference");
+        const data = await resp.json();
+        return data.notif_status.has_notif; // True or False
+    } catch (error) {
+        console.error(error);
+        return false; // Default to "No" in case of an error
+    }
+}
+
+async function renderNotifToggle() {
+    const notifTogglePlaceholder = document.getElementById("notifTogglePlaceholder");
+    const hasNotif = await loadNotifPref();
+
+    // Create the slider toggle UI with a badge
+    notifTogglePlaceholder.innerHTML = `
+        <label class="me-3 fw-bold" for="notifSwitch">Receive Notification Emails:</label>
+        <div class="form-check form-switch d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="notifSwitch" ${hasNotif ? "checked" : ""}>
+            <span id="notifBadge" class="badge ${hasNotif ? "bg-success" : "bg-secondary"} ms-3">
+                ${hasNotif ? "Yes" : "No"}
+            </span>
+        </div>
+    `;
+
+    // Add event listener to handle toggling
+    const notifSwitch = document.getElementById("notifSwitch");
+    const notifBadge = document.getElementById("notifBadge");
+
+    notifSwitch.addEventListener("change", async () => {
+        const isChecked = notifSwitch.checked;
+        notifBadge.textContent = isChecked ? "Yes" : "No";
+        notifBadge.classList.toggle("bg-success", isChecked);
+        notifBadge.classList.toggle("bg-secondary", !isChecked);
+
+        // Update the server with the new preference
+        try {
+            const resp = await fetch("/api/user/notif", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ notif_status: isChecked }),
+            });
+            if (!resp.ok) {
+                console.error("Failed to update notification preference");
+            }
+        } catch (error) {
+            console.error("Error updating notification preference:", error);
+        }
+    });
+}
+
+// Call renderNotifToggle on page load
+document.addEventListener("DOMContentLoaded", renderNotifToggle);
+
+// Call renderNotifToggle on page load
+document.addEventListener("DOMContentLoaded", renderNotifToggle);

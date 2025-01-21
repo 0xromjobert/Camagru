@@ -6,7 +6,7 @@ class NavBar extends HTMLElement {
       this.innerHTML = `
         <nav class="navbar">
           <div class="navbar-container">
-            <a class="navbar-brand" href="/">CAMAGRU</a>
+            <a class="navbar-brand lobster-regular" href="/">Camagru</a>
             <button class="navbar-toggler" aria-expanded="false" aria-label="Toggle navigation">
               ☰
             </button>

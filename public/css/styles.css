@@ -190,6 +190,12 @@ main {
   }
 }
 
+.lobster-regular {
+  font-family: "Lobster", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 /***************************** ICON PAGE PART ************************/
 /* Like Button Styling */

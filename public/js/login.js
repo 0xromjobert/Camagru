@@ -46,3 +46,22 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       }
     }
 });
+
+
+/*  
+at DOM loading, check if any alert message from previous redirection (signup) -> show alerts and del
+*/
+document.addEventListener('DOMContentLoaded', () => {
+  // Check for an alert message in localStorage
+  const alertMessage = localStorage.getItem('alertMessage');
+  const alertType = localStorage.getItem('alertType');
+
+  if (alertMessage) {
+      // Show the alert
+      showAlert(alertMessage, alertType);
+
+      // Clear the message from localStorage after showing it
+      localStorage.removeItem('alertMessage');
+      localStorage.removeItem('alertType');
+  }
+});

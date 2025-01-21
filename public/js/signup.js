@@ -16,7 +16,10 @@ document.getElementById('SignupForm').addEventListener('submit', async (e) => {
   
     const result = await response.json();
     if (response.ok) {
-      showAlert(result.message);
+      showAlert(result.message, 'sucess');
+      // Save the alert message in localStorage -> make it sticky across redirection
+      localStorage.setItem('alertMessage', result.message);
+      localStorage.setItem('alertType', 'success');
       window.location.href = '/auth/login'; // Redirect to edit page
     } 
     else {

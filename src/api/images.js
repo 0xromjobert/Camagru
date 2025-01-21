@@ -2,6 +2,7 @@ const { query } = require('../config/database');
 const express = require('express')
 const path = require('path');
 const {authToken} = require('../middleware/tokenJWT');
+const {sendEmail} = require('../controllers/emailHelper');
 const fs = require('fs').promises; // Use fs.promises for async operations
 
 const router = express.Router();
@@ -203,6 +204,21 @@ router.post('/comment/:id', authToken, async (req, res) => {
         
         //ALL goood -> insert in the Db
         await query("INSERT INTO comments (user_id, comment, image_id) VALUES ($1, $2, $3);", [userId, comment, imageId]);
+        const user_email_qr = await query(`
+            SELECT email, has_notif FROM users
+            WHERE id = (
+                SELECT user_id 
+                FROM images WHERE id = $1
+            )`, [imageId]);
+        const user_email = user_email_qr.rows[0];
+        if (user_email && user_email.has_notif){
+            try {
+                sendEmail(user_email.email,"Camagru new comment", 
+                `${req.user.username} has commented on one of your images!`);
+            } catch (emailError) {
+                console.error("Failed to send notification email:", emailError);
+            }
+        }
         return res.status(201).json({message:'image commented'});
     }
     catch(error){

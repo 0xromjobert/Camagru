@@ -27,4 +27,8 @@ app.use('/profile', profileRoutes);
 
 app.use('/', galleryRoutes); //binding the home to the galleryRoutes
 
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, "./views/404.html"));
+});
+
 module.exports = app;
