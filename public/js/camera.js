@@ -6,6 +6,7 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
     addThumbnail(img);
 });
 
+document.addEventListener('DOMContentLoaded', buildCarroussel());
 
 async function camStream(){
     try{
@@ -20,13 +21,33 @@ async function camStream(){
 };
 
 function captureScreen(){
+    //getting video and stickers [separated elements]
     const videoStream = document.querySelector('#webcam');
+    const stickers = document.querySelectorAll(".sticker-overlay");
+
+    //create a canva dynamically -> WHAT IS A CANVAS?
     const canva = document.createElement('canvas');
     canva.height = videoStream.videoHeight;
     canva.width = videoStream.videoWidth;
     const context = canva.getContext('2d');
     
     context.drawImage(videoStream, 0,0, canva.width, canva.height);
+
+    // Draw each sticker onto the canvas
+    stickers.forEach((sticker) => {
+      const rect = sticker.getBoundingClientRect(); // Get sticker position
+      const videoRect = videoStream.getBoundingClientRect(); // Get video position
+      
+      // Calculate sticker position relative to the video
+      const x = rect.x - videoRect.x;
+      const y = rect.y - videoRect.y;
+      const width = rect.width;
+      const height = rect.height;
+      
+      // Draw the sticker on the canvas
+      context.drawImage(sticker, x, y, width, height);
+    });
+
     const imgData = canva.toDataURL('image/png');
     return imgData;
 };
@@ -41,71 +62,43 @@ function addThumbnail(imageData) {
     thumbnail.classList.add('img-thumbnail'); // Add Bootstrap thumbnail class for styling
   
     // Append the thumbnail to the container
-    thumbnailsContainer.appendChild(thumbnail);
+    thumbnailsContainer.prepend(thumbnail);
   }
 
-
+function buildCarroussel() {
+  const stickPath = "/assets/stickers";
+  const stickers = [
+    "saltbae.png",
+    "doge.png",
+    "morpheus.png",
+    "robert.png",
+    "smart.png",
+    "bitcoin.png",
+    "svalley.png",
+  ];
+  // Clear any existing content inside the custom element
+  const carousContainer = document.getElementById('stickcarous')
+  // Dynamically add images to the carousel
+  stickers.forEach((sticker) => {
+    const img = document.createElement("img");
+    img.src = `${stickPath}/${sticker}`;
+    img.alt = sticker.split(".")[0]; // Optional: Use filename as alt text
+    img.style = "max-height: 100%; object-fit: contain;";
+    img.addEventListener('click', () => addStickerToVideo(img.src));
+    carousContainer.appendChild(img);
+  });
   
-class stickeCarroussel extends HTMLElement {
-    constructor(){
-        super();
-    }
+}
 
-    async connectedCallback(){
-        this.innerHTML = `<div class="d-flex overflow-auto w-100 gap-2" style="height: 10%" id="stickerCarous"></div>`
-        /* `
-        <div class="d-flex justify-content-center align-items-center">
-        <div id="cardCarousel" class="carousel slide w-100 mt-3" data-bs-ride="carousel" style="height: auto;">
-        <div class="carousel-inner h-50">
-          <div class="carousel-item active h-50">
-            <div class="d-flex justify-content-center flex-wrap gap-3 align-items-center h-80" id="stickerCarous">
-              <!-- Cards will be dynamically appended here -->
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
-        `;*/
-
-        await this.buidCarroussel();
-
-    };
-
-    async buidCarroussel(){
-        const stickPath = "/assets/stickers";
-        const stickers = ["bitcoin.png", 'doge.png', 'morpheus.png', 'robert.png', 'saltbae.png', 'smart.png', 'svalley.png'];
-        
-        const carous = this.querySelector("#stickerCarous");
-        console.log(carous);
-        if (!carous) {
-          console.error("#stickerCarous element not found");
-          return;
-        }
-        stickers.forEach((stck) =>{
-        
-            const img = document.createElement("img");
-            const src = `${stickPath}/${stck}`;
-            img.src = src;
-            img.alt = "Sticker";
-            img.className = "rounded";
-            //img.style.height = "100px"; // Fixed height for consistency
-            carous.appendChild(img);
-        });
-    };
-    
-    buildCard(imagePath){
-        // Create the card container
-      // Create the container
-      const container = document.createElement('div');
-      container.className = 'image-container'; // Add a class for styling
-  
-      // Set innerHTML directly
-      container.innerHTML = `
-          <img src="${imagePath}" alt="Carousel Image" class="image">
-      `;
-      return container;
-    };
-
-};
-
-customElements.define('sticker-car', stickeCarroussel);
+function addStickerToVideo(imgSrc){
+  const videoSpace = document.querySelector('#videoContainer');
+  if (!videoSpace){
+    console.error("could not find videoCam or Image");
+    return;
+  }
+  const sticker = document.createElement("img");
+  sticker.src = imgSrc;
+  sticker.className= "sticker-overlay";
+  videoSpace.appendChild(sticker);
+  console.log(sticker);
+}

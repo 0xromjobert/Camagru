@@ -5,7 +5,7 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,   -- Unique email, max 100 characters
     password VARCHAR(255) NOT NULL,       -- Hashed password
     is_confirmed BOOLEAN DEFAULT FALSE,       -- Email confirmation status
-    has_notif BOOLEAN DEFAULT True,          -- receive email notif on comments
+    has_notif BOOLEAN DEFAULT TRUE,          -- receive email notif on comments
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set creation time
 );
 

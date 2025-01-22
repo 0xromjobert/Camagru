@@ -9,38 +9,34 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="bg-light vh-100 d-flex flex-column">  
+  <body class="bg-light vh-100 d-flex flex-column">  
     <main class="flex-grow-1">
       <nav-bar></nav-bar>
       <div id="alertPlaceholder"></div>
        <!-- Main content layout -->
-  <div class="row g-3 flex-grow-1">
-    <!-- Camera Section -->
-    <div class="col-lg-8 col-12 d-flex flex-column justify-content-center align-items-center bg-white border">
-      <!-- Camera Area -->
-      <div class="d-flex flex-column justify-content-center align-items-center w-100 mb-3" style="height: 70%;">
-        <video id="webcam" autoplay class="w-100 h-100"></video>
+      <div class="row g-3 flex-grow-1 " style="margin: 0; padding-top: 1rem;">
+        <!-- Camera Section -->
+          <div class="col-lg-8 col-12 d-flex flex-column overflow-auto bg-light border" style="max-height: 100vh;">
+            <!-- Camera Area -->
+            <div class="d-flex justify-content:start w-100 mb-3" style="margin: 0; padding-top: 1rem;aspect-ratio: 16 / 9;" id = "videoContainer">
+              <video id="webcam" autoplay class="w-100 h-100"  style="object-fit: contain;"></video>
+            </div>
+            <!-- Sticker Carousel Area -->
+            <div class="d-flex justify-content-start align-items-start w-100 mt-3 overflow-auto " style="max-height: 20vh;" id="stickcarous"></div>
+            <!-- Button Area -->
+            <div class="d-flex justify-content-center align-items-center mt-3 w-100"">
+              <button id="takePicture" class="btn btn-dark">Take Picture</button>
+            </div>
+          </div>
+        <!-- Thumbnails Section -->
+        <div class="col-lg-4 col-12 d-flex flex-column  overflow-auto bg-light border" style="max-height: 100vh;">
+          <h5 class="text-center mt-2 lobster-regular">Thumbnails</h5>
+          <div id="thumbnails" class="d-flex flex-column gap-2 p-2">
+            <!-- Thumbnails will be dynamically added here -->
+          </div>
+        </div>
       </div>
-    
-      <!-- Sticker Carousel Area -->
-      <div class="d-flex flex-column justify-content-center align-items-start w-100 mb-3" style="height: 10%;">
-        <sticker-car></sticker-car>
-      </div>
-    
-      <!-- Button Area -->
-      <div class="d-flex justify-content-center align-items-center w-100" style="height: 10%;">
-        <button id="takePicture" class="btn btn-dark">Take Picture</button>
-      </div>
-    </div>
-    <!-- Thumbnails Section -->
-    <div class="col-lg-4 col-12 d-flex flex-column bg-light border overflow-auto" style="max-height: 80vh;">
-      <h5 class="text-center mt-2 lobster-regular">Thumbnails</h5>
-      <div id="thumbnails" class="d-flex flex-column gap-2 p-2">
-        <!-- Thumbnails will be dynamically added here -->
-      </div>
-    </div>
-  </div>
-  </main>
-  <site-footer></site-footer>
-</body>
+    </main>
+    <site-footer></site-footer>
+  </body>
 </html>

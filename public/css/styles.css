@@ -271,3 +271,17 @@ main {
   display: inline-block; /* Ensure proper centering */
   margin-bottom: 10px; /* Add spacing below the button */
 }
+
+/********************* video Cam snapchat sticker ***********************************/
+
+.sticker-overlay {
+  position: absolute;
+  top: 10%; /* Adjust as needed */
+  left: 10%; /* Adjust as needed */
+  width: 100px; /* Sticker size */
+  height: auto; /* Maintain aspect ratio */
+  pointer-events: none; /* Prevent interactions from affecting the video */
+}
+#video-container {
+  position: relative; /* Ensure stickers are positioned relative to this container */
+}
