@@ -275,13 +275,21 @@ main {
 /********************* video Cam snapchat sticker ***********************************/
 
 .sticker-overlay {
-  position: absolute;
   top: 10%; /* Adjust as needed */
   left: 10%; /* Adjust as needed */
   width: 100px; /* Sticker size */
   height: auto; /* Maintain aspect ratio */
-  pointer-events: none; /* Prevent interactions from affecting the video */
+  pointer-events: auto; /* Prevent interactions from affecting the video */
+  position: absolute; /* Allows free positioning */
+  cursor: grab; /* Changes cursor to indicate dragability */
+  z-index: 10; /* Ensure stickers appear above the video */
+  transition: transform 0.2s ease; /* Smooth hover effect */
 }
-#video-container {
+#videoContainer {
   position: relative; /* Ensure stickers are positioned relative to this container */
 }
+
+/* #stickcarous{
+  overflow-x: scroll;
+  border: solid 5px blue;
+} */

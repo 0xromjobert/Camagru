@@ -4,6 +4,7 @@ const profileRoutes = require('./routes/profile');
 const authAPI = require('./api/auth');
 const userAPI = require('./api/userPage')
 const imageAPI = require('./api/images')
+const camAPI = require('./api/camera')
 const galleryRoutes = require('./routes/gallery')
 const cameraRoutes = require('./routes/camera');
 const path = require('path');
@@ -21,6 +22,7 @@ app.use(express.static(path.join(__dirname,'../public')));
 app.use('/api/auth', authAPI);
 app.use('/api/user', userAPI);
 app.use('/api/images', imageAPI);
+app.use('/api/camera', camAPI);
 
 // Mount the auth routes at a specific path for html Pages
 app.use('/auth', authRoutes);

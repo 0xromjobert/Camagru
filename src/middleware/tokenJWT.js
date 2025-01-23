@@ -24,10 +24,7 @@ function authToken(req, res, next) {
         if (!payload) {
             // Invalid or expired token: clear cookie and inform the client
             res.clearCookie('authToken');
-            return res.status(403).json({
-                error: 403,
-                message: "Invalid or expired credentials. Please login again."
-            });
+            return res.status(403).redirect('/');
         }
 
         // Token is valid, attach user info to req

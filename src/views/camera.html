@@ -1,4 +1,5 @@
- <html>
+<!DOCTYPE HTML>
+<html>
  <head>
   <script type="module" src="/js/camera.js" defer></script> 
   <!-- COMMON HEADER TO ALL PAGES-->
@@ -18,11 +19,13 @@
         <!-- Camera Section -->
           <div class="col-lg-8 col-12 d-flex flex-column overflow-auto bg-light border" style="max-height: 100vh;">
             <!-- Camera Area -->
-            <div class="d-flex justify-content:start w-100 mb-3" style="margin: 0; padding-top: 1rem;aspect-ratio: 16 / 9;" id = "videoContainer">
-              <video id="webcam" autoplay class="w-100 h-100"  style="object-fit: contain;"></video>
+            <div class="d-flex justify-content:start w-100 mb-3" style="max-height:70vh;margin: 0; padding-top: 1rem;" id = "videoContainer">
+              <video id="webcam" autoplay class="w-100 h-100"  style="object-fit: cover;"></video>
             </div>
             <!-- Sticker Carousel Area -->
-            <div class="d-flex justify-content-start align-items-start w-100 mt-3 overflow-auto " style="max-height: 20vh;" id="stickcarous"></div>
+            <div class="d-flex justify-content:start align-items-center w-100 mt-3 overflow-auto" style="max-height: 20vh;" id="stickcarous">
+                <!-- <img src="assets/stickers/bitcoin.png"> -->
+            </div>
             <!-- Button Area -->
             <div class="d-flex justify-content-center align-items-center mt-3 w-100"">
               <button id="takePicture" class="btn btn-dark">Take Picture</button>
