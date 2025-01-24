@@ -9,6 +9,7 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
       return;
     const img = captureScreen();
     addThumbnail(img);
+    postPicture(img);
 });
 
 document.addEventListener('DOMContentLoaded', buildCarroussel());
@@ -28,6 +29,28 @@ async function camStream(){
     }
 };
 
+/*
+
+*/
+async function postPicture(imgURL) {
+  try {
+    const binImg = dataURLToBlob(imgURL);
+    
+    const formData = new FormData();
+    formData.append('image', binImg);
+
+    const resp = await fetch("/api/camera/process-image", {
+      method: 'POST',
+      body: formData,
+    });
+    const rslt = await resp.json();
+    console.log(rslt);
+  }
+  catch (error) {
+    console.error("error posting to db", error);
+  }
+
+};
 
 function captureScreen(){
     
@@ -64,7 +87,6 @@ function captureScreen(){
     });
 
     const imgData = canva.toDataURL('image/png');
-    console.log("about to send:", imgData);
     return imgData;
 };
 
@@ -217,3 +239,15 @@ window.addEventListener("resize", () => {
   const stickers = document.querySelectorAll(".sticker-overlay");
   stickers.forEach((sticker) => updateStickerSizeAndPosition(sticker));
 });
+
+
+/********************** UTILS *******************/
+function dataURLToBlob(dataURL) {
+  const [metadata, base64Data] = dataURL.split(',');
+  const binaryString = atob(base64Data);
+  const byteArray = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    byteArray[i] = binaryString.charCodeAt(i);
+  }
+  return new Blob([byteArray], { type: metadata.split(':')[1].split(';')[0] });
+}

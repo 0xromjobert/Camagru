@@ -6,7 +6,6 @@ Middleware validator that read the request body and apply express-validator func
 in that case return a (non-empty) array, otherwise next() for next midware
 */
 const validate = (req, res, next) => {
-    console.log('Validating request body:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(401).json({ errors: errors.array() });

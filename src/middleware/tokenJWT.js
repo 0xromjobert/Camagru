@@ -4,9 +4,6 @@ const {encodeBase64, decodeBase64} = require("../utils/base64Encoding");
 const { verify } = require("../controllers/emailHelper");
 const secret = process.env.SECRET_KEY;
 
-//to take off after testing
-console.log("Loaded SECRET_KEY:", process.env.SECRET_KEY, "vs ", secret);
-
 /*
 main function to auth with a twist on absent logged in so it can be used as state as well
 */

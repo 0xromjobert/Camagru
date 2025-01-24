@@ -15,6 +15,8 @@ const cookieparser = require('cookie-parser');
 app.use(express.json());
 app.use(cookieparser());
 
+app.use(express.json({ limit: '10mb' })); // Increase limit to 10 MB (for images)
+
 // Mounting public dir to Serve static files 
 app.use(express.static(path.join(__dirname,'../public')));
 

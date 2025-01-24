@@ -57,6 +57,7 @@ router.get('/', async (req, res) => {
             total: totalImg,
             images,
         });
+        console.log(images, totalImg);
     } catch (err) {
         console.error('Error fetching images:', err);
         res.status(500).json({ error: 'Failed to load images' });
