@@ -30,7 +30,9 @@ async function camStream(){
 };
 
 /*
-
+responsible for sending an image (converted from a Base64 data URL to binary data) 
+to the server using FormData and the fetch API. While no <form> HTML element is used, 
+the FormData object allows us to simulate a multipart form-data request programmatically.
 */
 async function postPicture(imgURL) {
   try {
@@ -49,9 +51,14 @@ async function postPicture(imgURL) {
   catch (error) {
     console.error("error posting to db", error);
   }
-
 };
 
+/*
+1. Captures the current **video frame** from a `<video>` element (e.g., webcam).
+2. **Overlays "stickers"** (e.g., `<img>` elements) onto the video.
+3. Combines the video and stickers into a **single image** using a `<canvas>` element.
+4. Returns the final image as a **Base64-encoded string**.
+*/
 function captureScreen(){
     
     //getting video and stickers [separated elements]
@@ -242,6 +249,12 @@ window.addEventListener("resize", () => {
 
 
 /********************** UTILS *******************/
+
+/*
+converts a Base64-encoded data URL (e.g., from canvas.toDataURL()) into a Blob object. 
+This is useful for efficiently handling and transferring image data because 
+Base64-encoded strings are significantly larger than their binary counterparts.
+*/
 function dataURLToBlob(dataURL) {
   const [metadata, base64Data] = dataURL.split(',');
   const binaryString = atob(base64Data);

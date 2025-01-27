@@ -11,7 +11,14 @@ const fs = require('fs')
 const router = express.Router();
 
 
-//MISSING AUTH TOKEN AND ADD TO DB
+/*
+reading multipart format into busboy -> eventloop base ingestion on HTTP
+three key events ->
+generate a uuid for the image file (a png) (avoid name conflict and ingestion)
+piping the req params (a stream itself) to busboy object (another stream)
+ on file -> ingest the file param, piped to a writable stream that goes to disk on the uuid.png
+ on end -> resize the file and clear the tmp
+*/
 router.post('/process-image', authToken, async (req, res) => {
     try {
         if (!req.user)
@@ -49,6 +56,10 @@ router.post('/process-image', authToken, async (req, res) => {
               }).toFile(savedFilePath);
             
             fileSaved = true;
+            fs.unlink(tmpFilePath, () => {
+              console.log("file tmp is cleared");
+
+            })
             console.log("file is saved", fileSaved);
           });
             
