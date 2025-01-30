@@ -7,9 +7,10 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
     e.preventDefault();
     if (!(stickerCounter > 0))
       return;
-    const img = captureScreen();
-    addThumbnail(img);
-    postPicture(img);
+    const {background, stickers} = captureScreen();
+    addThumbnail(background);
+    console.log("sticker is ", stickers);
+    postPicture(background, stickers);
 });
 
 document.addEventListener('DOMContentLoaded', buildCarroussel());
@@ -34,12 +35,16 @@ responsible for sending an image (converted from a Base64 data URL to binary dat
 to the server using FormData and the fetch API. While no <form> HTML element is used, 
 the FormData object allows us to simulate a multipart form-data request programmatically.
 */
-async function postPicture(imgURL) {
+async function postPicture(imgURL, stickers) {
   try {
     const binImg = dataURLToBlob(imgURL);
-    
+
+    //adding the background image as field of multipart from file
     const formData = new FormData();
     formData.append('image', binImg);
+
+    //pass each Sticker metadata to be loaeded and rebuilt on serverside
+    formData.append('metaData', JSON.stringify(stickers));
 
     const resp = await fetch("/api/camera/process-image", {
       method: 'POST',
@@ -79,6 +84,7 @@ function captureScreen(){
     const videoHeightRatio = canva.height / videoRect.height; // Scale factor for height
     
     // Draw each sticker onto the canvas
+    const stickCanvas = [];
     stickers.forEach((sticker) => {
       const rect = sticker.getBoundingClientRect(); // Get sticker position
       const videoRect = videoStream.getBoundingClientRect(); // Get video position
@@ -90,10 +96,20 @@ function captureScreen(){
       const height = rect.height * videoHeightRatio;
       
       // Draw the sticker on the canvas
-      context.drawImage(sticker, x, y, width, height);
+      /*
+      const stickCanv = document.createElement('canvas');
+      const sitckCtxt = stickCanv.getContext('2d');
+      sitckCtxt.drawImage(sticker,0,0, x, y);
+      stickCanvas.push({sticker:stickCanv.toDataURL('image/png'), x:x, y:y, w:width, h:height});
+      */
+
+      //send key stickers info to the server
+      const stickerId = sticker.src.split("/").pop();
+      stickCanvas.push({imgSrc:stickerId,x:x, y:y, w:width, h:height});
+      
     });
 
-    const imgData = canva.toDataURL('image/png');
+    const imgData = {background: canva.toDataURL('image/png'), stickers: stickCanvas};
     return imgData;
 };
 
@@ -112,24 +128,20 @@ function addThumbnail(imageData) {
     thumbnailsContainer.prepend(thumbnail);
   }
 
-function buildCarroussel() {
-  const stickPath = "/assets/stickers";
-  const stickers = [
-    "saltbae.png",
-    "doge.png",
-    "morpheus.png",
-    "robert.png",
-    "smart.png",
-    "bitcoin.png",
-    "svalley.png",
-  ];
+async function buildCarroussel() {
+
+  //get asset path frm the server
+  const resp = await fetch("/api/camera/stickers");
+  const stickers = await resp.json();
+  
   // Clear any existing content inside the custom element
   const carousContainer = document.getElementById('stickcarous')
   // Dynamically add images to the carousel
   stickers.forEach((sticker) => {
     const img = document.createElement("img");
-    img.src = `${stickPath}/${sticker}`;
-    img.alt = sticker.split(".")[0]; // Optional: Use filename as alt text
+    img.src = sticker;
+    //img.src = `${stickPath}/${sticker}`;
+    img.alt = sticker.split("/").pop().split(".")[0]; // Optional: Use filename as alt text
     img.style = "max-height: 100%; object-fit: contain;";
     img.addEventListener('click', () => addStickerToVideo(img.src));
     carousContainer.appendChild(img);
@@ -148,8 +160,6 @@ function addStickerToVideo(imgSrc){
   //copy image src to build a sticker -> add it as overlay to the container video
   const sticker = document.createElement("img");
   sticker.src = imgSrc;
-  //sticker.style.height = `${0.5 * h}px`;
-  //sticker.style.width = 'auto';
   sticker.className= "sticker-overlay";
   
   // Assign a unique ID to the sticker
