@@ -71,15 +71,25 @@ router.post('/process-image', authToken, async (req, res) => {
 
         // Handle file upload
         busboy.on('file', (fieldname, file, info) => {
+          const { filename, encoding, mimeType } = info; // Get file info from Busboy
+          //console.log(`Uploading file: ${filename}, Type: ${mimeType}, Encoding: ${encoding}`);
           const tmpName = `tmp-${filename}`;
           tmpFilePath = path.join(uploadsDir, tmpName);
           const writeStream = fs.createWriteStream(tmpFilePath);
           file.pipe(writeStream);
           
           fileWritePromise = new Promise((resolve, reject) => {
-              writeStream.on('finish', () => {
-                  resolve();
-              });
+            writeStream.on('finish', async () => {
+                try {
+                    // Ensure the file is valid by checking its metadata
+                    await sharp(tmpFilePath).metadata();
+                    resolve();
+                } catch (error) {
+                    console.error("Error processing image with Sharp:", error);
+                    reject(new Error("Uploaded file is not a valid image."));
+                }
+            });
+    
               writeStream.on('error', (err) => {
                   console.error('Error writing file:', err);
                   reject(err);
@@ -98,6 +108,11 @@ router.post('/process-image', authToken, async (req, res) => {
 
               // Cleanup temp file
               fs.promises.unlink(tmpFilePath);
+              
+              //save to db and response
+              const result = await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3) RETURNING id;",[filename, savedFilePath, req.user.user_id]);
+              const imgId = result.rows[0].id;
+              res.status(200).json({'image created with id':imgId});
           }
           catch (error) {
               console.error('Error processing image:', error);
@@ -105,19 +120,17 @@ router.post('/process-image', authToken, async (req, res) => {
           }
       });
         
-        req.pipe(busboy);
-        const result = await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3) RETURNING id;",[filename, savedFilePath, req.user.user_id]);
-        const imgId = result.rows[0].id;
-        res.status(200).json({'image created with id':imgId});
+      req.pipe(busboy);
     }
     catch (error) {
         console.error('Error processing image:', error);
         res.status(500).send('Failed to process the image.');
     }
-  });
+});
 
 /*
-routes to get all the previous picture taken by user
+api route to get all the previous picture taken by user, this is used to build the thumbnails of all 
+previoulsy taken images by this user
 */
 router.get('/allPictures', authToken, async (req, res) => {
   if (!req.user)
@@ -140,7 +153,9 @@ router.get('/allPictures', authToken, async (req, res) => {
   }
 });
 
-
+/*
+recompute the stickers as image with their scaled size from the metadata array (path and grid position / dimension)
+*/
 async function processImage(backgroundPath, stickers, filename) {
 
   let image = sharp(backgroundPath);

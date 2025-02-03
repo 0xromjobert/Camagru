@@ -19,14 +19,17 @@ router.get('/logout', authToken, (req, res) => {
     res.redirect('/auth/login'); // Redirect to login page
 });
 
+/*
+endpoint for email verification ; check token and redirecto to login with message as url params
+*/
 router.get('/verify', async (req, res) => {
     const params = req.query;
-    console.log(params);
+
     const verified = await verifyEmailToken(params.token);
     if (verified) {
-        return res.status(200).json({message: 'Email verified successfully'});
+        return res.redirect('/auth/login?message=Email verified successfully'); // Redirect with a success message;
     }
-    return res.status(400).json({message: 'Email verification failed'});
+    return res.redirect('/?message=An error occurred during verification');
 });
 
 /* 
