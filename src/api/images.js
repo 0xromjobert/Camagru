@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
             total: totalImg,
             images,
         });
-        console.log(images, totalImg);
+        //console.log(images, totalImg);
     } catch (err) {
         console.error('Error fetching images:', err);
         res.status(500).json({ error: 'Failed to load images' });
@@ -80,6 +80,39 @@ router.get('/:filename', async (req, res) => {
     }
 });
 
+
+/*
+deleting the image from the thumbnail
+*/
+router.delete('/:imageId', authToken, async (req, res) => {
+    try{
+        console.log("endpoint delete for ", req.user);
+        if (!req.user)
+            return res.status(403).redirect('/');
+        const imgId = req.params.imageId;
+        const quer = await query("SELECT id, url FROM images WHERE user_id = $1 AND id = $2", [req.user.user_id, imgId]);
+        const usrImg = quer.rows[0];
+        console.log("dleting file", usrImg);
+        if (!usrImg)
+            return res.status(401).json({msg:"cannot delete this pciture"});
+        await query("DELETE FROM images WHERE id = $1", [imgId]);
+        // Delete the file from the filesystem
+        try {
+            await fs.unlink(usrImg.url);
+        } catch (err) {
+            console.error("Error deleting file:", err);
+            return res.status(500).json({ msg: "File deletion error" });
+        }
+        // No content response
+        res.status(204).send();
+    }
+    catch(err){
+        console.log("error while deleting picture", err);
+    }
+});
+
+
+/****************************** LIKE and COMMENTS API logic ******************************************/
 
 router.get('/like/:imageId', authToken, async (req, res) => {
     try {
@@ -105,6 +138,9 @@ router.get('/like/:imageId', authToken, async (req, res) => {
         res.status(500).json({ msg: "Server error", error: error.message });
     }
 });
+
+
+
 
 router.post('/like/:imageId', authToken, async (req, res) => {
     try {

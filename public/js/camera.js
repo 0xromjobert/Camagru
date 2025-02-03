@@ -2,15 +2,23 @@
 let stickerCounter = 0;
 
 document.addEventListener("DOMContentLoaded", camStream());
+document.addEventListener("DOMContentLoaded", addThumbnail());
 
 document.getElementById('takePicture').addEventListener("click", async (e)=>{
     e.preventDefault();
     if (!(stickerCounter > 0))
       return;
     const {background, stickers} = captureScreen();
-    addThumbnail(background);
-    console.log("sticker is ", stickers);
-    postPicture(background, stickers);
+    const newImg = await postPicture(background, stickers);
+    if (!newImg){
+      console.error("Image upload failed, skipping thumbnail update");
+      return;
+    }
+    //await addThumbnail();
+    setTimeout(async () => {
+      console.log("Refreshing thumbnails after upload...");
+      await addThumbnail();
+  }, 500);
 });
 
 document.addEventListener('DOMContentLoaded', buildCarroussel());
@@ -51,7 +59,7 @@ async function postPicture(imgURL, stickers) {
       body: formData,
     });
     const rslt = await resp.json();
-    console.log(rslt);
+    return rslt;
   }
   catch (error) {
     console.error("error posting to db", error);
@@ -92,9 +100,17 @@ function captureScreen(){
       // Calculate sticker position relative to the video
       const x = (rect.x - videoRect.x)* videoWidthRatio; // Scaled X position;
       const y = (rect.y - videoRect.y) * videoHeightRatio;
-      const width = rect.width * videoWidthRatio;
-      const height = rect.height * videoHeightRatio;
+      let width = rect.width * videoWidthRatio;
+      let height = rect.height * videoHeightRatio;
       
+      // Ensure stickers fit inside the background
+      width = Math.min(width, canva.width - x);
+      height = Math.min(height, canva.height - y);
+      // Convert to integer values before sending
+      const finalX = Math.round(x);
+      const finalY = Math.round(y);
+      const finalW = Math.round(width);
+      const finalH = Math.round(height);
       // Draw the sticker on the canvas
       /*
       const stickCanv = document.createElement('canvas');
@@ -105,7 +121,7 @@ function captureScreen(){
 
       //send key stickers info to the server
       const stickerId = sticker.src.split("/").pop();
-      stickCanvas.push({imgSrc:stickerId,x:x, y:y, w:width, h:height});
+      stickCanvas.push({imgSrc:stickerId,x:finalX, y:finalY, w:finalW, h:finalH});
       
     });
 
@@ -114,19 +130,69 @@ function captureScreen(){
 };
 
 
-
-function addThumbnail(imageData) {
+/* 
+query endpoit yo get all the images for this user, stacked from last to first -> user get route
+re-load after picture, add hover with delte picture button
+*/
+async function addThumbnail(imageData) {
     const thumbnailsContainer = document.getElementById('thumbnails');
+    thumbnailsContainer.innerHTML = "";
     
     // Create a new <img> element
-    const thumbnail = document.createElement('img');
-    thumbnail.src = imageData; // Set the captured image as the source
-    thumbnail.alt = 'Thumbnail';
-    thumbnail.classList.add('img-thumbnail'); // Add Bootstrap thumbnail class for styling
+    const resp = await fetch("/api/camera/allPictures");
+    const result = await resp.json();
+    const allImages = result.user_img;
+
+    allImages.forEach((img) => {
+      const thumbnail = document.createElement('img');
+      thumbnail.src = img.url; // Set the captured image as the source
+      thumbnail.alt = img.title;
+      //thumbnail.style.maxHeight = "50vh";
+      thumbnail.classList.add('img-thumbnail'); // Add Bootstrap thumbnail class for styling
+
+      // Create the delete button (attached directly to the image)
+      const deleteButton = document.createElement('button');
+      deleteButton.innerHTML = "❌";
+      deleteButton.classList.add('delete-btn');
+      
+      // Attach delete event
+      deleteButton.addEventListener("click", async (event) => {
+          event.stopPropagation(); // Prevent triggering other events on the image
+          await deleteImage(img.id);
+      });
+
+      // Create a container div
+      const thumbnailWrapper = document.createElement('div');
+      thumbnailWrapper.classList.add('thumbnail-wrapper');
+
+      // Append the button as a child of the image (absolute positioning)
+      thumbnailWrapper.appendChild(deleteButton);
+      thumbnailWrapper.appendChild(thumbnail);
   
-    // Append the thumbnail to the container
-    thumbnailsContainer.prepend(thumbnail);
+      // Append the thumbnail to the container
+      thumbnailsContainer.prepend(thumbnailWrapper);
+    });
+}
+
+async function deleteImage(imgId) {
+  try {
+    const resp = await fetch(`/api/images/${imgId}`, {
+      method: 'DELETE',
+    });
+
+    if (resp.status === 204) {
+      console.log("Image deleted successfully");
+    } else {
+      const data = await resp.json();
+      console.log(data);
+    }
+
+    // Remove the deleted image from the UI
+    await addThumbnail(); // Reload the thumbnails after deletion
+  } catch (error) {
+    console.error("Error deleting the resource:", error);
   }
+}
 
 async function buildCarroussel() {
 
@@ -228,7 +294,7 @@ document.addEventListener("drop", (event) => {
     const sticker = document.querySelector(`[data-sticker-id="${stickId}"]`);
 
     if (!sticker) {
-      console.error("Dragged sticker not found");
+      //console.error("Dragged sticker not found");
       return;
   }
     // Apply new position (clamped to container bounds)

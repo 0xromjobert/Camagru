@@ -54,12 +54,10 @@ router.post('/process-image', authToken, async (req, res) => {
         const uploadsDir = path.join(__dirname,'../../gallery');
         const stickDir = path.join(__dirname,'../../public/assets/stickers');
 
-        console.log(req.body);
         // Ensure the uploads directory exists
         if (!fs.existsSync(uploadsDir))
             fs.mkdirSync(uploadsDir);
 
-        let fileSaved = false;
         const savedFilePath = path.join(uploadsDir, filename);
         let stickers = [];
 
@@ -69,20 +67,17 @@ router.post('/process-image', authToken, async (req, res) => {
           stickers = stickers.map((sticker) => {
             return {...sticker, path: `${stickDir}/${sticker.imgSrc}`};
           });
-          console.log("stickers", stickers);
         });
 
         // Handle file upload
         busboy.on('file', (fieldname, file, info) => {
           const tmpName = `tmp-${filename}`;
           tmpFilePath = path.join(uploadsDir, tmpName);
-          console.log('Temporary file path:', tmpFilePath);
           const writeStream = fs.createWriteStream(tmpFilePath);
           file.pipe(writeStream);
           
           fileWritePromise = new Promise((resolve, reject) => {
               writeStream.on('finish', () => {
-                  console.log(`File successfully written: ${tmpFilePath}`);
                   resolve();
               });
               writeStream.on('error', (err) => {
@@ -99,20 +94,21 @@ router.post('/process-image', authToken, async (req, res) => {
               await fileWritePromise;
 
               // Process the image
-              const processedFilePath = await processImage(tmpFilePath, stickers, savedFilePath);
-              
-              res.status(200).json({ message: 'Image processed successfully'+ processedFilePath });
+              await processImage(tmpFilePath, stickers, savedFilePath);
 
               // Cleanup temp file
-              fs.unlink(tmpFilePath, () => console.log(`Temp file deleted: ${tmpFilePath}`));
-          } catch (error) {
+              fs.promises.unlink(tmpFilePath);
+          }
+          catch (error) {
               console.error('Error processing image:', error);
               res.status(500).json({ error: 'Failed to process the image.' });
           }
       });
         
         req.pipe(busboy);
-        //SILENT FOR TEST await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3);",[filename, resPath, req.user.user_id]);
+        const result = await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3) RETURNING id;",[filename, savedFilePath, req.user.user_id]);
+        const imgId = result.rows[0].id;
+        res.status(200).json({'image created with id':imgId});
     }
     catch (error) {
         console.error('Error processing image:', error);
@@ -120,31 +116,88 @@ router.post('/process-image', authToken, async (req, res) => {
     }
   });
 
-  async function processImage(backgroundPath, stickers, filename) {
-    console.log("Starting image processing with sharp...");
-
-    let image = sharp(backgroundPath);
-    const { width: bgWidth, height: bgHeight } = await image.metadata();
-    console.log(`Background image dimensions: ${bgWidth}x${bgHeight}`);
-    // Load all stickers and apply overlays
-    const overlays = await Promise.all(stickers.map(async (sticker) => {
-        console.log(`Processing sticker: ${sticker.imgSrc}`)
-        console.log(`Sticker processed: ${sticker.imgSrc} - dimensions: x-y${sticker.x}x${sticker.y} - widthxheight: ${sticker.w} - height: ${sticker.h}`);
+/*
+routes to get all the previous picture taken by user
+*/
+router.get('/allPictures', authToken, async (req, res) => {
+  if (!req.user)
+    return res.status(403).redirect('/'); //redirect user if not loggedin
+  try {
+      const result = await query("SELECT id, title, url, created_at FROM images WHERE user_id = $1 ORDER BY created_at;", [req.user.user_id]);
+      const allImages = result.rows;
+      const userImages = allImages.map((img) => {
         return {
-            input: sticker.path, // Sticker file path
-            top: Math.round(sticker.y), // Position Y
-            left: Math.round(sticker.x), // Position X
-            width: Math.round(sticker.w), // Resize width
-            height: Math.round(sticker.h) // Resize height
+          id: img.id,
+          title: img.title,
+          url : `/api/images/${img.url.split('/').pop()}`,
+          created_at : img.created_at,
         };
-    }));
+      });
+      res.status(200).json({user_img:userImages});
+  }
+  catch(error){
+    console.error("Error loading usr images", error);
+  }
+});
 
-    // Apply overlays using `composite`
-    image = await image.composite(overlays)
-    // Save the final image
-    await image.toFile(filename)
-    console.log(`Final image saved: ${filename}`)
-    return outputFilePath;
+
+async function processImage(backgroundPath, stickers, filename) {
+
+  let image = sharp(backgroundPath);
+  const { width: bgWidth, height: bgHeight } = await image.metadata();
+
+  // Step 1: Resize background FIRST
+  const newBgWidth = 600;
+  const newBgHeight = 800;
+
+  const resizedBackgroundBuffer = await image
+      .resize(newBgWidth, newBgHeight, { fit: 'cover' })  // Use 'cover' to avoid extra borders
+      .toBuffer();
+
+  // Step 2: Scale sticker positions and ensure they stay inside the image
+  const widthRatio = newBgWidth / bgWidth;
+  const heightRatio = newBgHeight / bgHeight;
+
+  const overlays = await Promise.all(stickers.map(async (sticker) => {
+      try {
+          // Scale sticker position and size based on new background dimensions
+          let newX = Math.round(sticker.x * widthRatio);
+          let newY = Math.round(sticker.y * heightRatio);
+          let newW = Math.round(sticker.w * widthRatio);
+          let newH = Math.round(sticker.h * heightRatio);
+
+          // Ensure stickers do not go outside the resized image
+          newX = Math.max(0, Math.min(newX, newBgWidth - newW));
+          newY = Math.max(0, Math.min(newY, newBgHeight - newH));
+
+          const stickerBuffer = await sharp(sticker.path)
+              .resize({ width: newW, height: newH, fit: 'inside' })
+              .toBuffer();
+
+          return {
+              input: stickerBuffer,
+              top: newY,
+              left: newX,
+          };
+      } catch (error) {
+          console.error(`Error processing sticker ${sticker.path}:`, error);
+          return null;
+      }
+  }));
+
+  // Remove any failed stickers
+  const validOverlays = overlays.filter(sticker => sticker !== null);
+
+  if (validOverlays.length === 0) {
+      throw new Error("All sticker processing failed.");
+  }
+
+  // Step 3: Apply stickers on the resized background
+  await sharp(resizedBackgroundBuffer)
+      .composite(validOverlays)
+      .toFile(filename);
 }
+
+
   
   module.exports = router;
