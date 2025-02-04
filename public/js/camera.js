@@ -1,3 +1,5 @@
+import { showAlert } from "./components/alertComponent.js";
+
 //global var for total stikcer
 let stickerCounter = 0;
 
@@ -11,13 +13,15 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
     if (!(stickerCounter > 0))
       return;
     const {background, stickers} = captureScreen();
-    const newImg = await postPicture(background, stickers);
-    if (!newImg){
-      console.error("Image upload failed, skipping thumbnail update");
-      return;
+    
+    //defensive check : empty background, no stickers or background built from no data [empty base64]
+    if (!background || stickers.length === 0 || background === "data:,") {
+      showAlert("No background image nor stickers found - try again with both", "danger");
     }
-
-    setTimeout(async () => {
+    else
+      await postPicture(background, stickers);
+    
+      setTimeout(async () => {
       await addThumbnail();
   }, 500);
 });
@@ -26,16 +30,21 @@ document.addEventListener('DOMContentLoaded', buildCarroussel());
 
 async function camStream(){
     try{
-        const stream = await navigator.mediaDevices.getUserMedia({video:true});
-        const videoElem = document.querySelector('#webcam');
-        videoElem.srcObject = stream;
-        videoElem.play();
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({video:true});
+          const videoElem = document.querySelector('#webcam');
+          videoElem.srcObject = stream;
+          videoElem.play();
+        }
+        catch(error){
+            showAlert("Webcam access error - please allow webcam or upload picture", "danger");
+        }
         const picbutton = document.querySelector('#takePicture');
         if (stickerCounter === 0)
-            picbutton.disabled = true;
+          picbutton.disabled = true;
     }
     catch(error){
-        console.error("wecam access error", error);
+        showAlert("could not load the camera page, please refresh", "danger");
     }
 };
 
@@ -60,6 +69,10 @@ async function postPicture(imgURL, stickers) {
       body: formData,
     });
     const rslt = await resp.json();
+    if (resp.status !== 200 && rslt.error) {
+      showAlert(rslt.error, "danger");
+      return null;
+    }
     return rslt;
   }
   catch (error) {
@@ -223,7 +236,9 @@ async function buildCarroussel() {
   });
   
 }
+/*
 
+*/
 async function uploadImgFile(event) {
   event.preventDefault();
 
@@ -231,7 +246,7 @@ async function uploadImgFile(event) {
       // Create a hidden input element to select a file
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/png, image/jpeg, image/jpg, image/gif, image/webp'; // Allowed formats
+      input.accept = 'image/png, image/jpeg, image/jpg'; // Allowed formats
       input.click(); // Trigger file selection
 
       input.addEventListener('change', async () => {
@@ -260,7 +275,6 @@ async function uploadImgFile(event) {
       alert("An error occurred while loading the image.");
   }
 }
-
 
 /**
  * Replaces the webcam `<video>` with an `<img>` but keeps the same `id="webcam"`
@@ -298,6 +312,7 @@ function replaceWebcamWithImage(imageUrl) {
 }
 
 /*******************************Adding sticker and drag and drop logic *******************/
+
 function addStickerToVideo(imgSrc){
   const videoSpace = document.querySelector('#videoContainer');
   const videoStream = document.querySelector('#webcam');

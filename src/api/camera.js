@@ -116,7 +116,7 @@ router.post('/process-image', authToken, async (req, res) => {
           }
           catch (error) {
               console.error('Error processing image:', error);
-              res.status(500).json({ error: 'Failed to process the image.' });
+              res.status(400).json({error: 'Failed to process the image, try with webcam or upload jpg/png content' });
           }
       });
         
