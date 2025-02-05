@@ -20,7 +20,7 @@ services:
     image: postgres:12
     volumes:
       - ./database:/docker-entrypoint-initdb.d
-      #- ./postgres_data: /var/lib/postgresql/data
+      #- ./postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}

@@ -1,5 +1,5 @@
 const express = require('express');
-const sharp = require('sharp');
+const sharp = require('sharp'); //equivalent to PHP GD
 const path = require('path');
 const Busboy = require('busboy'); //to handle multipart form -> similar PHP $_FILES['file']['tmp_name']
 const {authToken} = require('../middleware/tokenJWT');
@@ -10,6 +10,29 @@ const fs = require('fs')
 
 const router = express.Router();
 
+/*
+Serving stikcers as asset path from staticly served folder, uins glater on to rebuild hte imag serverside
+*/
+router.get('/stickers', authToken, async (req, res)=>{
+  try {
+    const stickDir = '/assets/stickers';
+    const stickers = [
+      "saltbae.png",
+      "doge.png",
+      "morpheus.png",
+      "robert.png",
+      "smart.png",
+      "bitcoin.png",
+      "svalley.png",
+    ];
+    const resPath = stickers.map((sticker) => `${stickDir}/${sticker}`);
+    res.json(resPath);
+
+  }
+  catch(error){
+    console.error('Error fetching stickers:', error);
+  }
+});
 
 /*
 reading multipart format into busboy -> eventloop base ingestion on HTTP
@@ -28,91 +51,168 @@ router.post('/process-image', authToken, async (req, res) => {
         const busboy = Busboy({ headers: req.headers });
         const uuid = uuidv4();
         const filename = uuid.concat('.png');
-        const resPath = '/gallery/'.concat(filename);
         const uploadsDir = path.join(__dirname,'../../gallery');
+        const stickDir = path.join(__dirname,'../../public/assets/stickers');
 
         // Ensure the uploads directory exists
         if (!fs.existsSync(uploadsDir))
             fs.mkdirSync(uploadsDir);
 
-        let fileSaved = false;
-        let savedFilePath = '';
+        const savedFilePath = path.join(uploadsDir, filename);
+        let stickers = [];
 
-        busboy.on('file', (fieldname, file, busfilename, encoding, mimetype) => {
-          console.log('File event triggered:', busfilename);
-          const tmpFilePath = path.join(uploadsDir, `tmp-${filename}`);
-          console.log('save file path', savedFilePath, 'temp is', tmpFilePath);
-          const writeStream = fs.createWriteStream(tmpFilePath);
-          
-          file.pipe(writeStream);
-
-        
-          file.on('end', async () => {
-            const savedFilePath = path.join(uploadsDir, filename);
-            console.log(`File saved to: ${savedFilePath}`);
-            await sharp(tmpFilePath).resize(300, 400, { 
-                fit: 'contain', 
-                background: { r: 255, g: 255, b: 255, alpha: 1 }
-              }).toFile(savedFilePath);
-            
-            fileSaved = true;
-            fs.unlink(tmpFilePath, () => {
-              console.log("file tmp is cleared");
-
-            })
-            console.log("file is saved", fileSaved);
-          });
-            
-          // Log errors during file upload
-          writeStream.on('error', (err) => {
-              console.error('Error writing file:', err);
-
-          });
-          file.on('error', (err) => {
-            console.error('Error during file upload:', err);
+        // Field event: Triggered for each non-file form field
+        busboy.on('field', (name, value) => {
+          stickers = JSON.parse(value);
+          stickers = stickers.map((sticker) => {
+            return {...sticker, path: `${stickDir}/${sticker.imgSrc}`};
           });
         });
-        
-        req.pipe(busboy);
-        await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3);",[filename, resPath, req.user.user_id]);
-        //DELETE TEMP FILE -> Don't forget  d
 
+        // Handle file upload
+        busboy.on('file', (fieldname, file, info) => {
+          const { filename, encoding, mimeType } = info; // Get file info from Busboy
+          //console.log(`Uploading file: ${filename}, Type: ${mimeType}, Encoding: ${encoding}`);
+          const tmpName = `tmp-${filename}`;
+          tmpFilePath = path.join(uploadsDir, tmpName);
+          const writeStream = fs.createWriteStream(tmpFilePath);
+          file.pipe(writeStream);
+          
+          fileWritePromise = new Promise((resolve, reject) => {
+            writeStream.on('finish', async () => {
+                try {
+                    // Ensure the file is valid by checking its metadata
+                    await sharp(tmpFilePath).metadata();
+                    resolve();
+                } catch (error) {
+                    console.error("Error processing image with Sharp:", error);
+                    reject(new Error("Uploaded file is not a valid image."));
+                }
+            });
+    
+              writeStream.on('error', (err) => {
+                  console.error('Error writing file:', err);
+                  reject(err);
+              });
+          });
+        });
+
+        // Finish event: Wait for file save before processing
+        busboy.on('finish', async () => {
+          try {
+              // Ensure the file is fully saved before processing
+              await fileWritePromise;
+
+              // Process the image
+              await processImage(tmpFilePath, stickers, savedFilePath);
+
+              // Cleanup temp file
+              fs.promises.unlink(tmpFilePath);
+              
+              //save to db and response
+              const result = await query("INSERT INTO images (title, url, user_id) VALUES ($1, $2, $3) RETURNING id;",[filename, savedFilePath, req.user.user_id]);
+              const imgId = result.rows[0].id;
+              res.status(200).json({'image created with id':imgId});
+          }
+          catch (error) {
+              console.error('Error processing image:', error);
+              res.status(400).json({error: 'Failed to process the image, try with webcam or upload jpg/png content' });
+          }
+      });
+        
+      req.pipe(busboy);
     }
     catch (error) {
         console.error('Error processing image:', error);
         res.status(500).send('Failed to process the image.');
     }
-  });
+});
 
+/*
+api route to get all the previous picture taken by user, this is used to build the thumbnails of all 
+previoulsy taken images by this user
+*/
+router.get('/allPictures', authToken, async (req, res) => {
+  if (!req.user)
+    return res.status(403).redirect('/'); //redirect user if not loggedin
+  try {
+      const result = await query("SELECT id, title, url, created_at FROM images WHERE user_id = $1 ORDER BY created_at;", [req.user.user_id]);
+      const allImages = result.rows;
+      const userImages = allImages.map((img) => {
+        return {
+          id: img.id,
+          title: img.title,
+          url : `/api/images/${img.url.split('/').pop()}`,
+          created_at : img.created_at,
+        };
+      });
+      res.status(200).json({user_img:userImages});
+  }
+  catch(error){
+    console.error("Error loading usr images", error);
+  }
+});
+
+/*
+recompute the stickers as image with their scaled size from the metadata array (path and grid position / dimension)
+*/
+async function processImage(backgroundPath, stickers, filename) {
+
+  let image = sharp(backgroundPath);
+  const { width: bgWidth, height: bgHeight } = await image.metadata();
+
+  // Step 1: Resize background FIRST
+  const newBgWidth = 600;
+  const newBgHeight = 800;
+
+  const resizedBackgroundBuffer = await image
+      .resize(newBgWidth, newBgHeight, { fit: 'cover' })  // Use 'cover' to avoid extra borders
+      .toBuffer();
+
+  // Step 2: Scale sticker positions and ensure they stay inside the image
+  const widthRatio = newBgWidth / bgWidth;
+  const heightRatio = newBgHeight / bgHeight;
+
+  const overlays = await Promise.all(stickers.map(async (sticker) => {
+      try {
+          // Scale sticker position and size based on new background dimensions
+          let newX = Math.round(sticker.x * widthRatio);
+          let newY = Math.round(sticker.y * heightRatio);
+          let newW = Math.round(sticker.w * widthRatio);
+          let newH = Math.round(sticker.h * heightRatio);
+
+          // Ensure stickers do not go outside the resized image
+          newX = Math.max(0, Math.min(newX, newBgWidth - newW));
+          newY = Math.max(0, Math.min(newY, newBgHeight - newH));
+
+          const stickerBuffer = await sharp(sticker.path)
+              .resize({ width: newW, height: newH, fit: 'inside' })
+              .toBuffer();
+
+          return {
+              input: stickerBuffer,
+              top: newY,
+              left: newX,
+          };
+      } catch (error) {
+          console.error(`Error processing sticker ${sticker.path}:`, error);
+          return null;
+      }
+  }));
+
+  // Remove any failed stickers
+  const validOverlays = overlays.filter(sticker => sticker !== null);
+
+  if (validOverlays.length === 0) {
+      throw new Error("All sticker processing failed.");
+  }
+
+  // Step 3: Apply stickers on the resized background
+  await sharp(resizedBackgroundBuffer)
+      .composite(validOverlays)
+      .toFile(filename);
+}
+
+
+  
   module.exports = router;
-
-
-     // try {
-    //     const { videoFrame, stickers } = req.body;
-
-    //     // Decode the Base64 video frame
-    //     console.log("received", videoFrame, stickers);
-    //     const videoBuffer = Buffer.from(videoFrame.split(',')[1], 'base64');
-    //     let image = sharp(videoBuffer); // Load the video frame into Sharp
-
-    //     // Prepare the stickers for compositing
-    //     const composites = await Promise.all(
-    //         stickers.map(async (sticker) => {
-    //             const stickerResponse = await fetch(sticker.src);
-    //             const stickerBuffer = await stickerResponse.buffer();
-    //             return {
-    //                 input: stickerBuffer, // Sticker image buffer
-    //                 top: Math.round(sticker.y), // Y position
-    //                 left: Math.round(sticker.x), // X position
-    //                 blend: 'over', // Overlay the sticker
-    //             };
-    //         })
-    //     );
-
-    //     // Composite the stickers onto the video frame
-    //     image = await image.composite(composites);
-
-    //     // Convert to PNG and send back the result
-    //     const finalBuffer = await image.png().toBuffer();
-    //     res.set('Content-Type', 'image/png').send(finalBuffer);
-    // }

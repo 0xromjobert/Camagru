@@ -1,31 +1,50 @@
+import { showAlert } from "./components/alertComponent.js";
+
 //global var for total stikcer
 let stickerCounter = 0;
 
 document.addEventListener("DOMContentLoaded", camStream());
+document.addEventListener("DOMContentLoaded", addThumbnail());
+
+document.getElementById('uploadImage').addEventListener("click", uploadImgFile);
 
 document.getElementById('takePicture').addEventListener("click", async (e)=>{
     e.preventDefault();
     if (!(stickerCounter > 0))
       return;
-    const img = captureScreen();
-    addThumbnail(img);
-    postPicture(img);
+    const {background, stickers} = captureScreen();
+    
+    //defensive check : empty background, no stickers or background built from no data [empty base64]
+    if (!background || stickers.length === 0 || background === "data:,") {
+      showAlert("No background image nor stickers found - try again with both", "danger");
+    }
+    else
+      await postPicture(background, stickers);
+    
+      setTimeout(async () => {
+      await addThumbnail();
+  }, 500);
 });
 
 document.addEventListener('DOMContentLoaded', buildCarroussel());
 
 async function camStream(){
     try{
-        const stream = await navigator.mediaDevices.getUserMedia({video:true});
-        const videoElem = document.querySelector('#webcam');
-        videoElem.srcObject = stream;
-        videoElem.play();
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({video:true});
+          const videoElem = document.querySelector('#webcam');
+          videoElem.srcObject = stream;
+          videoElem.play();
+        }
+        catch(error){
+            showAlert("Webcam access error - please allow webcam or upload picture", "danger");
+        }
         const picbutton = document.querySelector('#takePicture');
         if (stickerCounter === 0)
-            picbutton.disabled = true;
+          picbutton.disabled = true;
     }
     catch(error){
-        console.error("wecam access error", error);
+        showAlert("could not load the camera page, please refresh", "danger");
     }
 };
 
@@ -34,19 +53,27 @@ responsible for sending an image (converted from a Base64 data URL to binary dat
 to the server using FormData and the fetch API. While no <form> HTML element is used, 
 the FormData object allows us to simulate a multipart form-data request programmatically.
 */
-async function postPicture(imgURL) {
+async function postPicture(imgURL, stickers) {
   try {
     const binImg = dataURLToBlob(imgURL);
-    
+
+    //adding the background image as field of multipart from file
     const formData = new FormData();
     formData.append('image', binImg);
+
+    //pass each Sticker metadata to be loaeded and rebuilt on serverside
+    formData.append('metaData', JSON.stringify(stickers));
 
     const resp = await fetch("/api/camera/process-image", {
       method: 'POST',
       body: formData,
     });
     const rslt = await resp.json();
-    console.log(rslt);
+    if (resp.status !== 200 && rslt.error) {
+      showAlert(rslt.error, "danger");
+      return null;
+    }
+    return rslt;
   }
   catch (error) {
     console.error("error posting to db", error);
@@ -64,14 +91,32 @@ function captureScreen(){
     //getting video and stickers [separated elements]
     const videoStream = document.querySelector('#webcam');
     const stickers = document.querySelectorAll(".sticker-overlay");
-
-    //create a canva dynamically -> WHAT IS A CANVAS?
+        
+    // Create canvas
     const canva = document.createElement('canvas');
-    canva.height = videoStream.videoHeight;
-    canva.width = videoStream.videoWidth;
-    const context = canva.getContext('2d');
+    let sourceWidth, sourceHeight;
     
-    context.drawImage(videoStream, 0,0, canva.width, canva.height);
+    // **Detect if webcam is a <video> or an <img>**
+    if (videoStream.tagName === "VIDEO") {
+        // Webcam Mode
+        canva.height = videoStream.videoHeight;
+        canva.width = videoStream.videoWidth;
+        sourceWidth = canva.width;
+        sourceHeight = canva.height;
+    } else if (videoStream.tagName === "IMG") {
+        // Uploaded Image Mode
+        canva.width = videoStream.naturalWidth;
+        canva.height = videoStream.naturalHeight;
+        sourceWidth = canva.width;
+        sourceHeight = canva.height;
+    } else {
+        console.error("Unsupported webcam source.");
+        return null;
+    }
+    
+    // Draw webcam frame or uploaded image
+    const context = canva.getContext('2d');
+    context.drawImage(videoStream, 0,0, sourceWidth, sourceHeight);
 
     // Get DOM dimensions of the video (CSS-rendered size)
     const videoRect = videoStream.getBoundingClientRect();
@@ -79,6 +124,7 @@ function captureScreen(){
     const videoHeightRatio = canva.height / videoRect.height; // Scale factor for height
     
     // Draw each sticker onto the canvas
+    const stickCanvas = [];
     stickers.forEach((sticker) => {
       const rect = sticker.getBoundingClientRect(); // Get sticker position
       const videoRect = videoStream.getBoundingClientRect(); // Get video position
@@ -86,56 +132,186 @@ function captureScreen(){
       // Calculate sticker position relative to the video
       const x = (rect.x - videoRect.x)* videoWidthRatio; // Scaled X position;
       const y = (rect.y - videoRect.y) * videoHeightRatio;
-      const width = rect.width * videoWidthRatio;
-      const height = rect.height * videoHeightRatio;
+      let width = rect.width * videoWidthRatio;
+      let height = rect.height * videoHeightRatio;
       
-      // Draw the sticker on the canvas
-      context.drawImage(sticker, x, y, width, height);
+      // Ensure stickers fit inside the background
+      width = Math.min(width, canva.width - x);
+      height = Math.min(height, canva.height - y);
+      // Convert to integer values before sending
+      const finalX = Math.round(x);
+      const finalY = Math.round(y);
+      const finalW = Math.round(width);
+      const finalH = Math.round(height);
+
+      //send key stickers info to the server
+      const stickerId = sticker.src.split("/").pop();
+      stickCanvas.push({imgSrc:stickerId,x:finalX, y:finalY, w:finalW, h:finalH});
+      
     });
 
-    const imgData = canva.toDataURL('image/png');
+    const imgData = {background: canva.toDataURL('image/png'), stickers: stickCanvas};
     return imgData;
 };
 
 
-
-function addThumbnail(imageData) {
+/* 
+query endpoit yo get all the images for this user, stacked from last to first -> user get route
+re-load after picture, add hover with delte picture button
+*/
+async function addThumbnail(imageData) {
     const thumbnailsContainer = document.getElementById('thumbnails');
+    thumbnailsContainer.innerHTML = "";
     
     // Create a new <img> element
-    const thumbnail = document.createElement('img');
-    thumbnail.src = imageData; // Set the captured image as the source
-    thumbnail.alt = 'Thumbnail';
-    thumbnail.classList.add('img-thumbnail'); // Add Bootstrap thumbnail class for styling
-  
-    // Append the thumbnail to the container
-    thumbnailsContainer.prepend(thumbnail);
-  }
+    const resp = await fetch("/api/camera/allPictures");
+    const result = await resp.json();
+    const allImages = result.user_img;
 
-function buildCarroussel() {
-  const stickPath = "/assets/stickers";
-  const stickers = [
-    "saltbae.png",
-    "doge.png",
-    "morpheus.png",
-    "robert.png",
-    "smart.png",
-    "bitcoin.png",
-    "svalley.png",
-  ];
+    allImages.forEach((img) => {
+      const thumbnail = document.createElement('img');
+      thumbnail.src = img.url; // Set the captured image as the source
+      thumbnail.alt = img.title;
+      //thumbnail.style.maxHeight = "50vh";
+      thumbnail.classList.add('img-thumbnail'); // Add Bootstrap thumbnail class for styling
+
+      // Create the delete button (attached directly to the image)
+      const deleteButton = document.createElement('button');
+      deleteButton.innerHTML = "❌";
+      deleteButton.classList.add('delete-btn');
+      
+      // Attach delete event
+      deleteButton.addEventListener("click", async (event) => {
+          event.stopPropagation(); // Prevent triggering other events on the image
+          await deleteImage(img.id);
+      });
+
+      // Create a container div
+      const thumbnailWrapper = document.createElement('div');
+      thumbnailWrapper.classList.add('thumbnail-wrapper');
+
+      // Append the button as a child of the image (absolute positioning)
+      thumbnailWrapper.appendChild(deleteButton);
+      thumbnailWrapper.appendChild(thumbnail);
+  
+      // Append the thumbnail to the container
+      thumbnailsContainer.prepend(thumbnailWrapper);
+    });
+}
+
+async function deleteImage(imgId) {
+  try {
+    const resp = await fetch(`/api/images/${imgId}`, {
+      method: 'DELETE',
+    });
+
+    if (resp.status !== 204){
+      const data = await resp.json();
+      console.log(data);
+    }
+    // Remove the deleted image from the UI
+    await addThumbnail(); // Reload the thumbnails after deletion
+  } catch (error) {
+    console.error("Error deleting the resource:", error);
+  }
+}
+
+async function buildCarroussel() {
+
+  //get asset path frm the server
+  const resp = await fetch("/api/camera/stickers");
+  const stickers = await resp.json();
+  
   // Clear any existing content inside the custom element
   const carousContainer = document.getElementById('stickcarous')
   // Dynamically add images to the carousel
   stickers.forEach((sticker) => {
     const img = document.createElement("img");
-    img.src = `${stickPath}/${sticker}`;
-    img.alt = sticker.split(".")[0]; // Optional: Use filename as alt text
+    img.src = sticker;
+    //img.src = `${stickPath}/${sticker}`;
+    img.alt = sticker.split("/").pop().split(".")[0]; // Optional: Use filename as alt text
     img.style = "max-height: 100%; object-fit: contain;";
     img.addEventListener('click', () => addStickerToVideo(img.src));
     carousContainer.appendChild(img);
   });
   
 }
+/*
+
+*/
+async function uploadImgFile(event) {
+  event.preventDefault();
+
+  try {
+      // Create a hidden input element to select a file
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png, image/jpeg, image/jpg'; // Allowed formats
+      input.click(); // Trigger file selection
+
+      input.addEventListener('change', async () => {
+          const file = input.files[0]; // Get the selected file
+
+          if (!file) {
+              console.warn("No file selected.");
+              return;
+          }
+
+          // Validate file type
+          const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+          if (!allowedTypes.includes(file.type)) {
+              alert("Invalid file type. Please upload a PNG, JPG, JPEG, GIF, or WebP image.");
+              return;
+          }
+
+          // Convert the image file to a local URL
+          const imageURL = URL.createObjectURL(file);
+
+          // Replace the webcam stream with the uploaded image
+          replaceWebcamWithImage(imageURL);
+      });
+  } catch (error) {
+      console.error("Error loading image:", error);
+      alert("An error occurred while loading the image.");
+  }
+}
+
+/**
+ * Replaces the webcam `<video>` with an `<img>` but keeps the same `id="webcam"`
+ * so `captureScreen()` still works without modification.
+ * @param {string} imageUrl - The local URL of the uploaded image
+ */
+function replaceWebcamWithImage(imageUrl) {
+  const videoContainer = document.getElementById("videoContainer");
+  const oldWebcam = document.getElementById("webcam");
+
+  if (!oldWebcam) {
+      console.error("Webcam element not found.");
+      return;
+  }
+
+  // Stop the webcam stream if active
+  if (oldWebcam.tagName === "VIDEO" && oldWebcam.srcObject) {
+      const stream = oldWebcam.srcObject;
+      stream.getTracks().forEach(track => track.stop()); // Stop the webcam
+  }
+
+  // Remove old webcam element
+  oldWebcam.remove();
+
+  // Create an image element with the same ID
+  const uploadedImage = document.createElement("img");
+  uploadedImage.src = imageUrl;
+  uploadedImage.id = "webcam"; // Keep the same ID so `captureScreen()` still works
+  uploadedImage.style.width = "100%";
+  uploadedImage.style.height = "100%";
+  uploadedImage.style.objectFit = "contain";
+
+  // Append the new image element
+  videoContainer.appendChild(uploadedImage);
+}
+
+/*******************************Adding sticker and drag and drop logic *******************/
 
 function addStickerToVideo(imgSrc){
   const videoSpace = document.querySelector('#videoContainer');
@@ -148,8 +324,6 @@ function addStickerToVideo(imgSrc){
   //copy image src to build a sticker -> add it as overlay to the container video
   const sticker = document.createElement("img");
   sticker.src = imgSrc;
-  //sticker.style.height = `${0.5 * h}px`;
-  //sticker.style.width = 'auto';
   sticker.className= "sticker-overlay";
   
   // Assign a unique ID to the sticker
@@ -218,7 +392,7 @@ document.addEventListener("drop", (event) => {
     const sticker = document.querySelector(`[data-sticker-id="${stickId}"]`);
 
     if (!sticker) {
-      console.error("Dragged sticker not found");
+      //console.error("Dragged sticker not found");
       return;
   }
     // Apply new position (clamped to container bounds)
