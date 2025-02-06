@@ -32,7 +32,7 @@ const login = async (req, res) => {
         const token = generateJWT(payload);
         res.cookie('authToken', token, {
             httpOnly:true,
-            sameSite: 'Strict',
+            sameSite: 'Lax', //to prevent CSRF 'Strict' vs Lax
             secure:false, //to allow http
         });
         return res.status(200).json({message: 'Login successful', token: token});
