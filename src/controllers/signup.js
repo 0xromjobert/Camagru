@@ -49,7 +49,7 @@ const signup = async (req, res) => {
 
 function sendVerificationEmail(emailAddr, username, token) {
     // Mock email functionality
-    const emailContent = `Hi ${username}, Click the link to verify your email: http://localhost:3000/api/auth/verify?token=${token}`;
+    const emailContent = `Hi ${username}, Click the link to verify your email: http://${process.env.DNS}/api/auth/verify?token=${token}`;
     sendEmail(emailAddr, 'Email Verification Camagru', emailContent);
 }
 

@@ -12,10 +12,10 @@ RUN apt install netcat-openbsd
 
 # copy entire app src code in the current dir
 COPY . . 
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+RUN chmod +x /usr/src/app/init_conf/entrypoint.sh
+ENTRYPOINT ["/usr/src/app/init_conf/entrypoint.sh"]
 
 EXPOSE 3000
 #start the app in dev mode, later on replace for start
-CMD ["npm", "run", "dev"] 
+#CMD ["npm", "run", "dev"] 
+CMD ["npm", "start"]

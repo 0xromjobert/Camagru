@@ -5,7 +5,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - .:/usr/src/app # Maps your local project to the container
+      - .:/usr/src/app # Maps local project to the container
       - /usr/src/app/node_modules # Avoids overwriting node_modules
     depends_on:
       - db
@@ -15,6 +15,8 @@ services:
       DB_NAME: ${POSTGRES_NAME}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+  
   db:
     container_name: db_camagru
     image: postgres:12
@@ -30,7 +32,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    #restart: always
+    restart: unless-stopped
+  
+  nginx:
+    container_name: nginx_camagru
+    image: nginx:1.19.0
+    ports:
+      - "80:80"
+    volumes:
+      - ./init_conf/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
+    restart: always
 
 volumes:
   postgres_data_volume:
