@@ -12,6 +12,11 @@ import { showAlert } from "./components/alertComponent.js";
 class GalleryFeed extends HTMLElement {
     constructor() {
         super();
+        // Initialize properties : track current page, inage per laod, loading state, and more images to load
+        this.page = 1;
+        this.limit = 6;
+        this.loading = false;
+        this.hasMoreImg = true;
     }
 
     /**
@@ -20,25 +25,38 @@ class GalleryFeed extends HTMLElement {
     */
     connectedCallback() {
 
-        //LATER ON MAKE THE MODAL A COMPONENT
+        // Set the inner HTML of the element - then load the images and set up infinite scroll
         this.innerHTML = `
             <div class="row g-4" id="gallery"></div>
-            <div class="d-flex justify-content-center mt-4" id="pagination"></div>`;
-
-        this.fetchImages(); // Default to page 1
+            <div class="d-flex justify-content-center mt-4" id="pagination"></div>
+        `;
+        this.fetchImages();
+        this.infiniteScroll(); 
     }
     
     /*
     Fetch images from the server and render them in the gallery.
     */
-    async fetchImages(page = 1, limit = 6) {
+    async fetchImages(page = this.page, limit = this.limit) {
+        
+        //flag for loading to avoid concurrent fetch
+        if (this.loading || !this.hasMoreImg) return;
+        this.loading = true;
+        
         try {
             const response = await fetch(`/api/images?page=${page}&limit=${limit}`);
             if (!response.ok) throw new Error('Failed to fetch images');
 
             const data = await response.json();
             const gallery = this.querySelector('#gallery');
-            gallery.innerHTML = ''; // Clear previous images
+            
+            //gallery.innerHTML = ''; // Clear previous images
+
+            //avoid loading if no more images
+            if (data.images.length === 0){
+                this.hasMoreImg = false;
+                return;
+            }
 
             //Render each image as a card with strict ordering
             for (const image of data.images) {
@@ -63,11 +81,38 @@ class GalleryFeed extends HTMLElement {
             }
 
             // Update pagination controls
-            this.createPaginationControls(page, data.total);
+            this.page++;
+            
         } catch (err) {
             console.error(err);
             this.querySelector('#gallery').innerHTML = '<p>Error loading images</p>';
         }
+        finally { //WHY FINALLY HERE
+            this.loading = false; // Reset the loading flag
+        }
+    }
+
+    //infinite scroll
+    infiniteScroll() {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                this.fetchImages(this.page);
+            }
+        }, {
+            root: null,            // Viewport is the root
+            rootMargin: "300px",   // Load new content 300px before reaching the sentinel
+            threshold: 1.0
+        });
+    
+        // Create sentinel *above* the footer
+        const sentinel = document.createElement("div");
+        sentinel.id = "sentinel";
+        
+        // Insert before the footer
+        const footer = document.querySelector("site-footer");
+        footer.parentNode.insertBefore(sentinel, footer);
+    
+        observer.observe(sentinel);
     }
 
     createPaginationControls(currentPage, totalItems) {

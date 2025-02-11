@@ -3,8 +3,17 @@ import { showAlert } from "./components/alertComponent.js";
 //global var for total stikcer
 let stickerCounter = 0;
 
-document.addEventListener("DOMContentLoaded", camStream());
-document.addEventListener("DOMContentLoaded", addThumbnail());
+/*document.addEventListener("DOMContentLoaded", function() {
+  camStream();
+  addThumbnail();
+  buildCarroussel();
+});*/
+
+window.addEventListener("load", () => {
+  camStream();
+  addThumbnail();
+  buildCarroussel();
+});
 
 document.getElementById('uploadImage').addEventListener("click", uploadImgFile);
 
@@ -25,8 +34,6 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
       await addThumbnail();
   }, 500);
 });
-
-document.addEventListener('DOMContentLoaded', buildCarroussel());
 
 async function camStream(){
     try{

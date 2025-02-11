@@ -114,7 +114,7 @@ main {
   flex-grow: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start center; /* Prevents unnecessary vertical growth */
+  justify-content: flex-start; /*  center;Prevents unnecessary vertical growth */
 }
 
 /********************************* Gallery Style ***********************************************/
