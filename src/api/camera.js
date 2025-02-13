@@ -72,7 +72,6 @@ router.post('/process-image', authToken, async (req, res) => {
         // Handle file upload
         busboy.on('file', (fieldname, file, info) => {
           const { filename, encoding, mimeType } = info; // Get file info from Busboy
-          //console.log(`Uploading file: ${filename}, Type: ${mimeType}, Encoding: ${encoding}`);
           const tmpName = `tmp-${filename}`;
           tmpFilePath = path.join(uploadsDir, tmpName);
           const writeStream = fs.createWriteStream(tmpFilePath);
@@ -159,31 +158,32 @@ recompute the stickers as image with their scaled size from the metadata array (
 async function processImage(backgroundPath, stickers, filename) {
 
   let image = sharp(backgroundPath);
-  const { width: bgWidth, height: bgHeight } = await image.metadata();
+  // const { width: bgWidth, height: bgHeight } = await image.metadata();
 
-  // Step 1: Resize background FIRST
-  const newBgWidth = 600;
-  const newBgHeight = 800;
+  // // Step 1: load background FIRST to buffer
+  // const resizedBackgroundBuffer = await image.toBuffer();
 
-  const resizedBackgroundBuffer = await image
-      .resize(newBgWidth, newBgHeight, { fit: 'cover' })  // Use 'cover' to avoid extra borders
-      .toBuffer();
+   // **1. Get Original Image Dimensions**
+   const { width: bgWidth, height: bgHeight } = await image.metadata();
 
-  // Step 2: Scale sticker positions and ensure they stay inside the image
-  const widthRatio = newBgWidth / bgWidth;
-  const heightRatio = newBgHeight / bgHeight;
+   // **2. Convert Background to Buffer**
+   const resizedBackgroundBuffer = await image.toBuffer();
+
+   // **3. Get Dimensions After Buffer Conversion**
+   const { width: bufferWidth, height: bufferHeight } = await sharp(resizedBackgroundBuffer).metadata();
+
 
   const overlays = await Promise.all(stickers.map(async (sticker) => {
       try {
           // Scale sticker position and size based on new background dimensions
-          let newX = Math.round(sticker.x * widthRatio);
-          let newY = Math.round(sticker.y * heightRatio);
-          let newW = Math.round(sticker.w * widthRatio);
-          let newH = Math.round(sticker.h * heightRatio);
+          let newX = Math.round(sticker.x);
+          let newY = Math.round(sticker.y);
+          let newW = Math.round(sticker.w);
+          let newH = Math.round(sticker.h);
 
           // Ensure stickers do not go outside the resized image
-          newX = Math.max(0, Math.min(newX, newBgWidth - newW));
-          newY = Math.max(0, Math.min(newY, newBgHeight - newH));
+          newX = Math.max(0, Math.min(newX, bgWidth - newW));
+          newY = Math.max(0, Math.min(newY,bgHeight - newH));
 
           const stickerBuffer = await sharp(sticker.path)
               .resize({ width: newW, height: newH, fit: 'inside' })

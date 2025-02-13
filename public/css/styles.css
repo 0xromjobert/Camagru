@@ -123,7 +123,7 @@ main {
 /* Ensure proper spacing and alignment for the gallery */
 /* Container for the gallery images */
 .card-img-container {
-  aspect-ratio: 3/ 4; /* Maintain aspect ratio insta feed style */
+  aspect-ratio: 3/ 3; /* Maintain aspect ratio insta feed style */
   overflow: hidden;
   border-top-left-radius:15px;
   border-top-right-radius: 15px;

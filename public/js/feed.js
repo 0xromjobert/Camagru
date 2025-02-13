@@ -100,7 +100,7 @@ class GalleryFeed extends HTMLElement {
             }
         }, {
             root: null,            // Viewport is the root
-            rootMargin: "300px",   // Load new content 300px before reaching the sentinel
+            rootMargin: "100px",   // Load new content 300px before reaching the sentinel
             threshold: 1.0
         });
     
