@@ -3,12 +3,6 @@ import { showAlert } from "./components/alertComponent.js";
 //global var for total stikcer
 let stickerCounter = 0;
 
-/*document.addEventListener("DOMContentLoaded", function() {
-  camStream();
-  addThumbnail();
-  buildCarroussel();
-});*/
-
 window.addEventListener("load", () => {
   camStream();
   addThumbnail();
@@ -26,6 +20,7 @@ document.getElementById('takePicture').addEventListener("click", async (e)=>{
     //defensive check : empty background, no stickers or background built from no data [empty base64]
     if (!background || stickers.length === 0 || background === "data:,") {
       showAlert("No background image nor stickers found - try again with both", "danger");
+      console.error(`{background, stickers} = {${background}, ${stickers}}`);
     }
     else
       await postPicture(background, stickers);
@@ -94,73 +89,100 @@ async function postPicture(imgURL, stickers) {
 4. Returns the final image as a **Base64-encoded string**.
 */
 function captureScreen(){
-    
-    //getting video and stickers [separated elements]
+  try {
     const videoStream = document.querySelector('#webcam');
     const stickers = document.querySelectorAll(".sticker-overlay");
-        
-    // Create canvas
+
+    // Select container for dimensions
+    const containerRect = document.querySelector("#videoContainer").getBoundingClientRect();
+    const videoRect = videoStream.getBoundingClientRect();
+
+    // Create a canvas element
     const canva = document.createElement('canvas');
     let sourceWidth, sourceHeight;
-    
-    // **Detect if webcam is a <video> or an <img>**
+
+    // Detect if webcam is a <video> or an <img>
     if (videoStream.tagName === "VIDEO") {
-        // Webcam Mode
-        canva.height = videoStream.videoHeight;
-        canva.width = videoStream.videoWidth;
-        sourceWidth = canva.width;
-        sourceHeight = canva.height;
+        // Webcam Mode - Use the actual video resolution
+        sourceWidth = videoStream.videoWidth;
+        sourceHeight = videoStream.videoHeight;
     } else if (videoStream.tagName === "IMG") {
-        // Uploaded Image Mode
-        canva.width = videoStream.naturalWidth;
-        canva.height = videoStream.naturalHeight;
-        sourceWidth = canva.width;
-        sourceHeight = canva.height;
+        // Uploaded Image Mode - Use the natural resolution
+        sourceWidth = videoStream.naturalWidth;
+        sourceHeight = videoStream.naturalHeight;
+
+        // If the image size is undefined (issue with loading), return error
+        if (!sourceWidth || !sourceHeight) {
+            console.error("Uploaded image dimensions are undefined.");
+            return null;
+        }
     } else {
         console.error("Unsupported webcam source.");
         return null;
     }
-    
-    // Draw webcam frame or uploaded image
-    const context = canva.getContext('2d');
-    context.drawImage(videoStream, 0,0, sourceWidth, sourceHeight);
 
-    // Get DOM dimensions of the video (CSS-rendered size)
-    const videoRect = videoStream.getBoundingClientRect();
-    const videoWidthRatio = canva.width / videoRect.width; // Scale factor for width
-    const videoHeightRatio = canva.height / videoRect.height; // Scale factor for height
-    
-    // Draw each sticker onto the canvas
+    // // Ensure canvas size matches the **displayed size**, not the full resolution
+    // Preserve aspect ratio while setting canvas size
+    const aspectRatio = sourceWidth / sourceHeight;
+    let newCanvasWidth = containerRect.width;
+    let newCanvasHeight = containerRect.width / aspectRatio; // Adjust height based on aspect ratio
+
+    // If the new height exceeds the container height, adjust width instead
+    if (newCanvasHeight > containerRect.height) {
+        newCanvasHeight = containerRect.height;
+        newCanvasWidth = containerRect.height * aspectRatio;
+    }
+
+    canva.width = newCanvasWidth;
+    canva.height = newCanvasHeight;
+
+    const context = canva.getContext('2d');
+
+    // Draw webcam frame or uploaded image
+    context.drawImage(videoStream, 0, 0, canva.width, canva.height);
+
+    // Compute scale factor for positioning stickers correctly
+    const videoWidthRatio = canva.width / videoRect.width;
+    const videoHeightRatio = canva.height / videoRect.height;
+
+    // Overlay stickers on the captured image
     const stickCanvas = [];
     stickers.forEach((sticker) => {
-      const rect = sticker.getBoundingClientRect(); // Get sticker position
-      const videoRect = videoStream.getBoundingClientRect(); // Get video position
-      
-      // Calculate sticker position relative to the video
-      const x = (rect.x - videoRect.x)* videoWidthRatio; // Scaled X position;
-      const y = (rect.y - videoRect.y) * videoHeightRatio;
+      const rect = sticker.getBoundingClientRect(); 
+      const stickerX = (rect.x - videoRect.x) * videoWidthRatio; 
+      const stickerY = (rect.y - videoRect.y) * videoHeightRatio;
       let width = rect.width * videoWidthRatio;
       let height = rect.height * videoHeightRatio;
-      
+
       // Ensure stickers fit inside the background
-      width = Math.min(width, canva.width - x);
-      height = Math.min(height, canva.height - y);
+      width = Math.min(width, canva.width - stickerX);http://localhost:3000/assets/stickers/doge.png
+      height = Math.min(height, canva.height - stickerY);
+
       // Convert to integer values before sending
-      const finalX = Math.round(x);
-      const finalY = Math.round(y);
+      const finalX = Math.round(stickerX);
+      const finalY = Math.round(stickerY);
       const finalW = Math.round(width);
       const finalH = Math.round(height);
 
-      //send key stickers info to the server
+      // Add sticker data
       const stickerId = sticker.src.split("/").pop();
-      stickCanvas.push({imgSrc:stickerId,x:finalX, y:finalY, w:finalW, h:finalH});
-      
+      stickCanvas.push({ imgSrc: stickerId, x: finalX, y: finalY, w: finalW, h: finalH });
     });
 
-    const imgData = {background: canva.toDataURL('image/png'), stickers: stickCanvas};
-    return imgData;
-};
+    const imgData = { background: canva.toDataURL('image/png'), stickers: stickCanvas };
 
+    if (imgData.background === "data:,") {
+      console.error("Captured image is empty.");
+      return null;
+    }
+
+    return imgData;
+  }
+  catch (error) {
+    console.error("Error capturing the screen:", error);
+    return null;
+  }
+}
 
 /* 
 query endpoit yo get all the images for this user, stacked from last to first -> user get route
@@ -336,13 +358,18 @@ function addStickerToVideo(imgSrc){
   // Assign a unique ID to the sticker
   sticker.dataset.stickerId = ++stickerCounter;
   
-  sticker.dataset.leftPercent = 50; // Centered horizontally
-  sticker.dataset.topPercent = 50; // Centered vertically
-  sticker.dataset.widthPercent = 20; // 20% of container width initially
-   // Set initial size and position
-   updateStickerSizeAndPosition(sticker);
-
-  //make the newly created sticker drag & drop-able
+  // sticker.dataset.leftPercent = 50; // Centered horizontally
+  // sticker.dataset.topPercent = 50; // Centered vertically
+  // sticker.dataset.widthPercent = 50; // 20% of container width initially
+  // // Set initial size and position
+  //  updateStickerSizeAndPosition(sticker);
+  
+  // **Set sticker position to the top-left corner**
+  sticker.dataset.leftPercent = 0;  // **Aligns to the left edge**
+  sticker.dataset.topPercent = 0;   // **Aligns to the top edge**
+  sticker.dataset.widthPercent = 50; // Default width (adjust as needed)
+  updateStickerSizeAndPosition(sticker);
+  
   sticker.setAttribute('draggable', 'true');
   sticker.addEventListener("dragstart", handleDragStart);
   sticker.addEventListener("dragend", handleDragEnd);
