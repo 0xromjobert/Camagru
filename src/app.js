@@ -15,7 +15,7 @@ const cookieparser = require('cookie-parser');
 app.use(express.json());
 app.use(cookieparser());
 
-app.use(express.json({ limit: '10mb' })); // Increase limit to 10 MB (for images)
+app.use(express.json({ limit: '10mb' })); // Increase limit to 10 MB (BUT for images it is busboy as multipart form upload)
 
 // Mounting public dir to Serve static files 
 app.use(express.static(path.join(__dirname,'../public')));

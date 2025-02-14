@@ -44,11 +44,12 @@ piping the req params (a stream itself) to busboy object (another stream)
 */
 router.post('/process-image', authToken, async (req, res) => {
     try {
+      console.log("in process-image");
         if (!req.user)
             return res.status(403).redirect('/');
         
         //get from json as b64 -> decode to buffer and allocate random uuid name
-        const busboy = Busboy({ headers: req.headers });
+        const busboy = Busboy({ headers: req.headers, limits: 10* 1024 * 1024 }); //10mb limits size
         const uuid = uuidv4();
         const filename = uuid.concat('.png');
         const uploadsDir = path.join(__dirname,'../../gallery');
