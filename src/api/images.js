@@ -107,7 +107,7 @@ router.delete('/:imageId', authToken, async (req, res) => {
         res.status(204).send();
     }
     catch(err){
-        console.log("error while deleting picture", err);
+        console.error("error while deleting picture", err);
     }
 });
 

@@ -236,7 +236,7 @@ async function deleteImage(imgId) {
 
     if (resp.status !== 204){
       const data = await resp.json();
-      console.log(data);
+      //console.log(data);
     }
     // Remove the deleted image from the UI
     await addThumbnail(); // Reload the thumbnails after deletion
@@ -367,7 +367,7 @@ function addStickerToVideo(imgSrc){
   // **Set sticker position to the top-left corner**
   sticker.dataset.leftPercent = 0;  // **Aligns to the left edge**
   sticker.dataset.topPercent = 0;   // **Aligns to the top edge**
-  sticker.dataset.widthPercent = 50; // Default width (adjust as needed)
+  sticker.dataset.widthPercent = 30; // Default width (adjust as needed)
   updateStickerSizeAndPosition(sticker);
   
   sticker.setAttribute('draggable', 'true');
@@ -440,7 +440,7 @@ stickers are superposed image so they do not resize like the flex container do (
 we need to resize it 
 */
 function updateStickerSizeAndPosition(sticker) {
-  const videoSpace = document.querySelector("#videoContainer");
+  const videoSpace = document.querySelector("#webcam");
   const containerRect = videoSpace.getBoundingClientRect();
 
   // Calculate absolute position and size based on percentages

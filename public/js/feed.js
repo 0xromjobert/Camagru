@@ -115,20 +115,6 @@ class GalleryFeed extends HTMLElement {
         observer.observe(sentinel);
     }
 
-    createPaginationControls(currentPage, totalItems) {
-        const pagination = this.querySelector('#pagination');
-        pagination.innerHTML = ''; // Clear previous controls
-        const limit = 6; // Items per page
-        const totalPages = Math.ceil(totalItems / limit);
-
-        for (let i = 1; i <= totalPages; i++) {
-            const button = document.createElement('button');
-            button.textContent = i;
-            button.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline-primary';
-            button.onclick = () => this.fetchImages(i); // Fetch images for the selected page
-            pagination.appendChild(button);
-        }
-    }
 
     /**
     * Show or hide the comments section for a specific image.

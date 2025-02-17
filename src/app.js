@@ -17,7 +17,7 @@ app.use(cookieparser());
 
 app.use(express.json({ limit: '10mb' })); // Increase limit to 10 MB (BUT for images it is busboy as multipart form upload)
 
-// Mounting public dir to Serve static files 
+// Mounting public dir to Serve static files -> Later on use Nginx in prod
 app.use(express.static(path.join(__dirname,'../public')));
 
 //mounting api routes

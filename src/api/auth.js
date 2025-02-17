@@ -61,7 +61,6 @@ router.get('/reset-password/', async (req, res) => {
         const verified = await verifyResetToken(params.token);
         if (verified.status){
             payload_token = verifyJWT(verified.token);
-            console.log('success in the verif REset token, the token payload is', payload_token);
             res.cookie('authToken',verified.token,{
                 httpOnly: true,
                 sameSite:'Strict',

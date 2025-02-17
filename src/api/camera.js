@@ -11,7 +11,7 @@ const fs = require('fs')
 const router = express.Router();
 
 /*
-Serving stikcers as asset path from staticly served folder, uins glater on to rebuild hte imag serverside
+Serving stikcers as asset path from staticly served folder, usingg later on to rebuild hte image serverside
 */
 router.get('/stickers', authToken, async (req, res)=>{
   try {
@@ -44,7 +44,6 @@ piping the req params (a stream itself) to busboy object (another stream)
 */
 router.post('/process-image', authToken, async (req, res) => {
     try {
-      console.log("in process-image");
         if (!req.user)
             return res.status(403).redirect('/');
         
