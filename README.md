@@ -1,10 +1,10 @@
-# 📸 Camagru
+# Camagru
 
 **Camagru** is a full-stack photo-editing web application built as part of the **42 school advanced curriculum**. It challenges students to build a responsive, secure, and fully containerized web app without relying on third-party frameworks beyond what is allowed in the PHP standard library (or its equivalent in another stack). This project was developed using a modern JavaScript/Node.js stack in strict adherence to the subject’s constraints.
 
 ---
 
-## 🎓 School Project Context
+## School Project Context
 
 This application is a **mandatory evaluation project at 42**, where students must:
 
@@ -31,7 +31,7 @@ As per the 42 subject:
 
 ---
 
-## 🖼 Interface Preview
+## Interface Preview
 
 _You can insert screenshots of the interface here_
 
@@ -41,9 +41,9 @@ _You can insert screenshots of the interface here_
 
 ---
 
-## 🧠 Application Architecture
+## Application Architecture
 
-### 🧩 Tech Stack
+### Tech Stack
 
 - **Backend**: Node.js + Express.js  
 - **Database**: PostgreSQL (low-level `pg` or Sequelize as fallback)  
@@ -53,26 +53,26 @@ _You can insert screenshots of the interface here_
 - **Frontend**: Pure HTML/CSS + JavaScript (Bootstrap for layout, no external JS frameworks)  
 - **Containerization**: Docker & Docker Compose (multi-service setup)
 
-### 🔐 Auth System
+### Auth System
 
 - Uses **homemade JWT**: header, payload, and signature signed with HMAC-SHA256 via `crypto`.
 - Tokens are stored securely in **HttpOnly cookies** to avoid XSS.
 - Middleware handles cookie validation and automatic redirect on invalid tokens.
 - Includes **email verification** and **password reset** flow with expiring tokens.
 
-### 🖼 Image Editing
+### Image Editing
 
 - Users can capture a picture using their **webcam** or **upload an image**.
 - Stickers can be **dragged-and-positioned** before capture.
 - A canvas is used client-side to **preview**, but all final rendering is **done server-side**.
 
-### 🖼 Gallery & Infinite Scroll
+### Gallery & Infinite Scroll
 
 - Images are stored with associated metadata (creator, likes, comments).
 - Users can **like**, **comment**, and view **paginated or infinite-scroll feeds**.
 - Infinite scroll is implemented with a **sentinel** and `IntersectionObserver` to avoid heavy event listeners and race conditions.
 
-### 📁 File Structure
+### File Structure
 
 ```
 camagru/
@@ -103,7 +103,7 @@ camagru/
 ---
 
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### 1. Clone and Configure
 
